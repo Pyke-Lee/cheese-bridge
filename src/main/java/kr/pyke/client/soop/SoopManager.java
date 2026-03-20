@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import kr.pyke.CheeseBridge;
 import kr.pyke.client.PykeLibClient;
 import kr.pyke.network.payload.c2s.C2S_DonationPayload;
+import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
+import kr.pyke.util.PLATFORM;
 import kr.pyke.util.SoopProtocol;
 import kr.pyke.util.constants.COLOR;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -45,7 +47,7 @@ public class SoopManager {
         new Thread(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://openapi.sooplive.co.kr/broad/access/chatinfo"))
+                    .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
                     .header("Content-Type", "application/x-www-form-urlencoded")
                     .POST(HttpRequest.BodyPublishers.ofString("access_token=" + accessToken))
                     .build();
@@ -54,19 +56,49 @@ public class SoopManager {
 
                 if (response.statusCode() != 200) {
                     CheeseBridge.LOGGER.error("[SOOP] 채팅 정보 실패: {}", response.body());
+
+                    if (response.statusCode() == 401) {
+                        CheeseBridge.LOGGER.warn("[SOOP] 401 토큰 만료 감지 -> 갱신 요청");
+                        ClientPlayNetworking.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
+                    }
+
                     return;
                 }
 
                 JsonObject json = gson.fromJson(response.body(), JsonObject.class);
-                int resultCode = json.get("result").getAsInt();
 
+                if (json.has("error")) {
+                    String error = json.get("error").getAsString();
+                    if (error.equals("expired_token") || error.equals("invalid_token")) {
+                        CheeseBridge.LOGGER.warn("[SOOP] 토큰 만료/유효하지 않음 ({}) -> 갱신 요청", error);
+                        ClientPlayNetworking.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
+                        return;
+                    }
+                }
+
+                if (!json.has("result")) {
+                    CheeseBridge.LOGGER.error("[SOOP] 응답에 result 필드가 없습니다: {}", response.body());
+                    return;
+                }
+
+                int resultCode = json.get("result").getAsInt();
                 CheeseBridge.LOGGER.info("[SOOP] 수신된 resultCode: {}", resultCode);
 
                 if (resultCode != 1) {
                     String errorMsg = json.has("msg") ? json.get("msg").getAsString() : "Unknown Error";
 
-                    CheeseBridge.LOGGER.error("[SOOP] API 상세 에러: {} (코드: {})", errorMsg, resultCode);
-                    Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.RED.getColor(), "숲(SOOP) API 오류: " + errorMsg));
+                    if (resultCode == -10) {
+                        CheeseBridge.LOGGER.warn("[SOOP] 인증 실패(-10) -> 갱신 요청");
+                        ClientPlayNetworking.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
+                    }
+                    else if (resultCode == -1302) {
+                        CheeseBridge.LOGGER.warn("[SOOP] 연동 실패: 방송 중이 아님");
+                        Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.RED.getColor(), "숲(SOOP) 연동 실패: 생방송 중일 때만 연동이 가능합니다."));
+                    }
+                    else {
+                        CheeseBridge.LOGGER.error("[SOOP] API 상세 에러: {} (코드: {})", errorMsg, resultCode);
+                        Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.RED.getColor(), "숲(SOOP) API 오류: " + errorMsg));
+                    }
 
                     return;
                 }
@@ -96,16 +128,21 @@ public class SoopManager {
 
                     @Override
                     public void onMessage(String message) {
-                        handlePacket(message);
                     }
 
                     @Override
                     public void onMessage(ByteBuffer bytes) {
                         byte[] data = new byte[bytes.remaining()];
                         bytes.get(data);
+
                         if (data.length > 14) {
+                            String svcStr = new String(data, 2, 4, StandardCharsets.UTF_8);
+                            int svc = 0;
+                            try { svc = Integer.parseInt(svcStr); }
+                            catch (NumberFormatException ignored) { }
+
                             String bodyOnly = new String(data, 14, data.length - 14, StandardCharsets.UTF_8);
-                            handlePacket(bodyOnly);
+                            handlePacket(svc, bodyOnly);
                         }
                     }
 
@@ -127,8 +164,8 @@ public class SoopManager {
         }, "Soop-Connect-Thread").start();
     }
 
-    private void handlePacket(String body) {
-        CheeseBridge.LOGGER.info("[SOOP] handlePacket 호출됨 - 바디: {}", body);
+    private void handlePacket(int svc, String body) {
+        // CheeseBridge.LOGGER.info("[SOOP] handlePacket 호출됨 - 바디: {}", body);
 
         try {
             List<String> parts = SoopProtocol.parseBody(body);
@@ -149,12 +186,14 @@ public class SoopManager {
                 return;
             }
 
-            int offset = parts.getFirst().isEmpty() ? 1 : 0;
+            if (svc == SoopProtocol.SVC_SENDBALLOON || svc == SoopProtocol.SVC_SENDBALLOONSUB) {
+                int offset = parts.getFirst().isEmpty() ? 1 : 0;
 
-            if (parts.size() >= 4 + offset) {
-                String potentialAmount = parts.get(3 + offset);
-                if (potentialAmount.matches("\\d+")) {
-                    processFilteredSoopDonation(parts, offset);
+                if (parts.size() >= 4 + offset) {
+                    String potentialAmount = parts.get(3 + offset);
+                    if (potentialAmount.matches("\\d+")) {
+                        processFilteredSoopDonation(parts, offset);
+                    }
                 }
             }
         }
@@ -168,6 +207,12 @@ public class SoopManager {
 
         String nickname = parts.get(2 + offset);
         String amount = parts.get(3 + offset);
+
+        try {
+            if (Integer.parseInt(amount) <= 0) { return; }
+        }
+        catch (NumberFormatException e) { return; }
+
         String donationType = "별풍선";
 
         CheeseBridge.LOGGER.info("[SOOP] {} 정산 감지: {} ({}개)", donationType, nickname, amount);

@@ -67,7 +67,7 @@ public class BridgeIntegration {
                 body = GSON.toJson(json);
             }
             else if (platform == PLATFORM.SOOP) {
-                url = "https://openapi.sooplive.co.kr/auth/token";
+                url = "https://openapi.sooplive.com/auth/token";
                 contentType = "application/x-www-form-urlencoded";
                 body = String.format("grant_type=authorization_code&client_id=%s&client_secret=%s&redirect_uri=%s&code=%s",
                     CheeseBridgeConfig.DATA.soop.clientID,
@@ -108,7 +108,7 @@ public class BridgeIntegration {
                 body = GSON.toJson(json);
             }
             else if (platform == PLATFORM.SOOP) {
-                url = "https://openapi.sooplive.co.kr/auth/token";
+                url = "https://openapi.sooplive.com/auth/token";
                 contentType = "application/x-www-form-urlencoded";
                 body = String.format("grant_type=refresh_token&client_id=%s&client_secret=%s&refresh_token=%s",
                     CheeseBridgeConfig.DATA.soop.clientID,

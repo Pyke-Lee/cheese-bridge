@@ -63,7 +63,7 @@ public record C2S_RequestRefreshPayload(String platformName) implements CustomPa
             }
             else {
                 clientId = CheeseBridgeConfig.DATA.soop.clientID;
-                url = String.format("https://openapi.sooplive.co.kr/auth/code?client_id=%s&redirect_uri=%s", clientId, "http://localhost:8080/callback");
+                url = String.format("https://openapi.sooplive.com/auth/code?client_id=%s&redirect_uri=%s", clientId, "http://localhost:8080/callback");
             }
 
             PykeLib.sendSystemMessage(java.util.List.of(context.player()), COLOR.RED.getColor(), "인증 세션이 만료되었습니다. 다시 로그인을 진행해주세요.");

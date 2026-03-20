@@ -105,7 +105,7 @@ public class DonationCommand {
                         CheeseBridgeConfig.DATA.chzzk.clientID, "http://localhost:8080/callback", authState);
                 }
                 else {
-                    url = String.format("https://openapi.sooplive.co.kr/auth/code?client_id=%s&redirect_uri=%s",
+                    url = String.format("https://openapi.sooplive.com/auth/code?client_id=%s&redirect_uri=%s",
                         CheeseBridgeConfig.DATA.soop.clientID, "http://localhost:8080/callback");
                 }
                 ServerPlayNetworking.send(player, new S2C_AuthUrlPayload(url, platform.name()));
