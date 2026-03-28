@@ -64,7 +64,7 @@ public class DonationCommand {
             String managerName = Objects.requireNonNull(source.getPlayer()).getName().getString();
             String targetPlayerName = targetPlayer.getDisplayName().getString();
 
-            String platformTag = platformArg.equals("숲") ? "숲" : "치지직";
+            String platformTag = platformArg.equals("숲") ? "SOOP" : "CHZZK";
 
             source.getServer().execute(() -> {
                 DonationLogger.logDonationManager(targetPlayerName, String.valueOf(amount), managerName);
