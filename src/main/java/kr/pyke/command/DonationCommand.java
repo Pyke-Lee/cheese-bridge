@@ -22,6 +22,8 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +34,7 @@ public class DonationCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context, Commands.CommandSelection selection) {
         dispatcher.register(Commands.literal("후원")
-            .requires(sourceStack -> sourceStack.hasPermission(2))
+            .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(2))))
             .then(Commands.argument("targetPlayer", EntityArgument.player())
                 .then(Commands.argument("platform", StringArgumentType.string())
                     .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(List.of("\"치지직\"", "\"숲\""), builder))
@@ -56,17 +58,18 @@ public class DonationCommand {
             ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "targetPlayer");
             String platformArg = StringArgumentType.getString(ctx, "platform");
             int amount = IntegerArgumentType.getInteger(ctx, "donationAmount");
+            ServerPlayer player = ctx.getSource().getPlayerOrException();
 
             CommandSourceStack source = ctx.getSource();
             String managerName = Objects.requireNonNull(source.getPlayer()).getName().getString();
             String targetPlayerName = targetPlayer.getDisplayName().getString();
 
-            String platformTag = platformArg.equals("숲") ? "SOOP" : "CHZZK";
+            String platformTag = platformArg.equals("숲") ? "숲" : "치지직";
 
             source.getServer().execute(() -> {
                 DonationLogger.logDonationManager(targetPlayerName, String.valueOf(amount), managerName);
                 BridgeIntegration.triggerDonation(targetPlayer, new DonationEvent("운영자", String.valueOf(amount), "수동 지급", platformTag));
-                PykeLib.sendSystemMessage(source.getServer().getPlayerList().getPlayers(), COLOR.LIME.getColor(), String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetPlayerName, amount, platformTag));
+                PykeLib.sendSystemMessage(player, COLOR.LIME.getColor(), String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetPlayerName, amount, platformTag));
             });
 
             return 1;

@@ -10,8 +10,10 @@ import kr.pyke.client.soop.SoopManager;
 import kr.pyke.util.constants.COLOR;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+
+import java.awt.*;
+import java.net.URI;
 
 public class IntegrationCommand {
     private static final BridgeAuthServer AUTH_SERVER = new BridgeAuthServer();
@@ -38,7 +40,17 @@ public class IntegrationCommand {
 
     public static void startAuthProcess(String url, String platformName) {
         AUTH_SERVER.start(platformName);
-        Util.getPlatform().openUri(url);
+        openUrl(url);
         PykeLibClient.sendSystemMessage(COLOR.LIME.getColor(), platformName + " 로그인을 진행해주세요.");
+    }
+
+    private static void openUrl(String url) {
+        try {
+            Minecraft.getInstance().keyboardHandler.setClipboard(url);
+            Desktop.getDesktop().browse(new URI(url));
+        }
+        catch (Exception e) {
+            CheeseBridge.LOGGER.error("URL 열기 실패: {}", url, e);
+        }
     }
 }

@@ -9,11 +9,11 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public record S2C_FinalTokenPayload(String accessToken, String platformName) implements CustomPacketPayload {
-    public static final Type<S2C_FinalTokenPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath(CheeseBridge.MOD_ID, "s2c_final_token"));
+    public static final Type<S2C_FinalTokenPayload> ID = new Type<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "s2c_final_token"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, S2C_FinalTokenPayload> STREAM_CODEC = StreamCodec.composite(
         ByteBufCodecs.STRING_UTF8, S2C_FinalTokenPayload::accessToken,

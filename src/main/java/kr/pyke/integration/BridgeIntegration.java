@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import kr.pyke.CheeseBridge;
 import kr.pyke.config.CheeseBridgeConfig;
+import kr.pyke.integration.event.DonationReceivedCallback;
 import kr.pyke.util.PLATFORM;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -11,17 +12,13 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.function.BiConsumer;
 
 public class BridgeIntegration {
-    public static BiConsumer<ServerPlayer, DonationEvent> DONATION_HANDLER = null;
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
 
     public static void triggerDonation(ServerPlayer player, DonationEvent event) {
-        if (DONATION_HANDLER != null) {
-            DONATION_HANDLER.accept(player, event);
-        }
+        DonationReceivedCallback.DONATION_RECEIVED.invoker().onDonationReceived(player, event);
     }
 
     public static BridgeDataState.TokenInfo parseTokenResponse(String jsonResponse) {

@@ -1,19 +1,60 @@
 package kr.pyke.integration;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import kr.pyke.util.PLATFORM;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.storage.DimensionDataStorage;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class BridgeDataState extends SavedData {
-    public record TokenInfo(String accessToken, String refreshToken) { }
+    public record TokenInfo(String accessToken, String refreshToken) {
+        public static final Codec<TokenInfo> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.STRING.fieldOf("access").forGetter(TokenInfo::accessToken),
+            Codec.STRING.fieldOf("refresh").forGetter(TokenInfo::refreshToken)
+        ).apply(instance, TokenInfo::new));
+    }
+
+    private record TokenEntry(String uuid, String platform, String accessToken, String refreshToken) {
+        public static final Codec<TokenEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec.STRING.fieldOf("uuid").forGetter(TokenEntry::uuid),
+            Codec.STRING.fieldOf("platform").forGetter(TokenEntry::platform),
+            Codec.STRING.fieldOf("access").forGetter(TokenEntry::accessToken),
+            Codec.STRING.fieldOf("refresh").forGetter(TokenEntry::refreshToken)
+        ).apply(instance, TokenEntry::new));
+    }
+
+    public static final Codec<BridgeDataState> CODEC = TokenEntry.CODEC.listOf().xmap(
+        entries -> {
+            BridgeDataState state = new BridgeDataState();
+            for (TokenEntry entry : entries) {
+                try {
+                    UUID uuid = UUID.fromString(entry.uuid());
+                    PLATFORM platform = PLATFORM.valueOf(entry.platform());
+                    state.playerTokens
+                        .computeIfAbsent(uuid, k -> new HashMap<>())
+                        .put(platform, new TokenInfo(entry.accessToken(), entry.refreshToken()));
+                }
+                catch (IllegalArgumentException ignored) { }
+            }
+            return state;
+        },
+        state -> {
+            List<TokenEntry> entries = new ArrayList<>();
+            state.playerTokens.forEach((uuid, map) ->
+                map.forEach((platform, info) ->
+                    entries.add(new TokenEntry(uuid.toString(), platform.name(), info.accessToken(), info.refreshToken()))
+                )
+            );
+            return entries;
+        }
+    );
+
+    public static final SavedDataType<BridgeDataState> TYPE = new SavedDataType<>("cheese_bridge", BridgeDataState::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
 
     public final Map<UUID, Map<PLATFORM, TokenInfo>> playerTokens = new HashMap<>();
 
@@ -28,51 +69,8 @@ public class BridgeDataState extends SavedData {
         this.setDirty();
     }
 
-    public static BridgeDataState fromNbt(CompoundTag nbt, HolderLookup.Provider registries) {
-        BridgeDataState state = new BridgeDataState();
-        CompoundTag tokensNbt = nbt.getCompound("playerTokens");
-
-        for (String uuidKey : tokensNbt.getAllKeys()) {
-            UUID uuid = UUID.fromString(uuidKey);
-            CompoundTag platformTags = tokensNbt.getCompound(uuidKey);
-
-            Map<PLATFORM, TokenInfo> map = new HashMap<>();
-            for (PLATFORM platform : PLATFORM.values()) {
-                if (platformTags.contains(platform.name())) {
-                    CompoundTag tag = platformTags.getCompound(platform.name());
-                    map.put(platform, new TokenInfo(tag.getString("access"), tag.getString("refresh")));
-                }
-            }
-            state.playerTokens.put(uuid, map);
-        }
-
-        return state;
-    }
-
-    @Override
-    public @NotNull CompoundTag save(CompoundTag nbt, HolderLookup.Provider registries) {
-        CompoundTag tokensNbt = new CompoundTag();
-
-        playerTokens.forEach((uuid, map) -> {
-            CompoundTag platformTags = new CompoundTag();
-
-            map.forEach((platform, tokenInfo) -> {
-                CompoundTag tag = new CompoundTag();
-                tag.putString("access", tokenInfo.accessToken);
-                tag.putString("refresh", tokenInfo.refreshToken);
-                platformTags.put(platform.name(), tag);
-            });
-
-            tokensNbt.put(uuid.toString(), platformTags);
-        });
-
-        nbt.put("playerTokens", tokensNbt);
-        return nbt;
-    }
-
     public static BridgeDataState getServerState(MinecraftServer server) {
-        DimensionDataStorage storage = server.overworld().getDataStorage();
-
-        return storage.computeIfAbsent(new SavedData.Factory<>(BridgeDataState::new, BridgeDataState::fromNbt, null), "cheese_bridge");
+        ServerLevel overworld = server.overworld();
+        return overworld.getDataStorage().computeIfAbsent(TYPE);
     }
 }

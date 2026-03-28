@@ -9,11 +9,11 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public record C2S_DonationPayload(String donor, String donationAmount, String donationMessage, String platform) implements CustomPacketPayload {
-    public static final Type<C2S_DonationPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_donation"));
+    public static final Type<C2S_DonationPayload> ID = new Type<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_donation"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, C2S_DonationPayload> STREAM_CODEC = StreamCodec.composite(
         ByteBufCodecs.STRING_UTF8, C2S_DonationPayload::donor,
