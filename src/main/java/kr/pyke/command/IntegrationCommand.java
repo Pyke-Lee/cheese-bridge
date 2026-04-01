@@ -11,6 +11,7 @@ import kr.pyke.util.constants.COLOR;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Util;
 
 import java.awt.*;
 import java.net.URI;
@@ -47,7 +48,7 @@ public class IntegrationCommand {
     private static void openUrl(String url) {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(url);
-            Desktop.getDesktop().browse(new URI(url));
+            Util.getPlatform().openUri(new URI(url));
         }
         catch (Exception e) {
             CheeseBridge.LOGGER.error("URL 열기 실패: {}", url, e);
