@@ -2,7 +2,9 @@ package kr.pyke.integration;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import kr.pyke.CheeseBridge;
 import kr.pyke.util.PLATFORM;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
@@ -58,7 +60,7 @@ public class BridgeDataState extends SavedData {
         }
     );
 
-    public static final SavedDataType<BridgeDataState> TYPE = new SavedDataType<>("cheese_bridge", BridgeDataState::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
+    public static final SavedDataType<BridgeDataState> TYPE = new SavedDataType<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "cheese_bridge"), BridgeDataState::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
 
     private final Map<UUID, Map<PLATFORM, TokenInfo>> playerTokens = new HashMap<>();
 

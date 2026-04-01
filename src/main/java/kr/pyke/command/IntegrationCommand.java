@@ -8,7 +8,7 @@ import kr.pyke.client.PykeLibClient;
 import kr.pyke.client.chzzk.ChzzkManager;
 import kr.pyke.client.soop.SoopManager;
 import kr.pyke.util.constants.COLOR;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
@@ -19,7 +19,7 @@ public class IntegrationCommand {
     private static final BridgeAuthServer AUTH_SERVER = new BridgeAuthServer();
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        dispatcher.register(ClientCommandManager.literal("연동해제")
+        dispatcher.register(ClientCommands.literal("연동해제")
             .executes(IntegrationCommand::executeDisconnect)
         );
     }

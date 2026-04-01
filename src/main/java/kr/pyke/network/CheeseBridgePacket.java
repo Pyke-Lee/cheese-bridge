@@ -16,13 +16,13 @@ public class CheeseBridgePacket {
 
     public static void registerCodec() {
         // S2C (Server → Client)
-        PayloadTypeRegistry.playS2C().register(S2C_AuthUrlPayload.ID, S2C_AuthUrlPayload.STREAM_CODEC);
-        PayloadTypeRegistry.playS2C().register(S2C_FinalTokenPayload.ID, S2C_FinalTokenPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(S2C_AuthUrlPayload.ID, S2C_AuthUrlPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(S2C_FinalTokenPayload.ID, S2C_FinalTokenPayload.STREAM_CODEC);
 
         // C2S (Client → Server)
-        PayloadTypeRegistry.playC2S().register(C2S_DonationPayload.ID, C2S_DonationPayload.STREAM_CODEC);
-        PayloadTypeRegistry.playC2S().register(C2S_AuthCodePayload.ID, C2S_AuthCodePayload.STREAM_CODEC);
-        PayloadTypeRegistry.playC2S().register(C2S_RequestRefreshPayload.ID, C2S_RequestRefreshPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(C2S_DonationPayload.ID, C2S_DonationPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(C2S_AuthCodePayload.ID, C2S_AuthCodePayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(C2S_RequestRefreshPayload.ID, C2S_RequestRefreshPayload.STREAM_CODEC);
     }
 
     public static void registerServer() {
