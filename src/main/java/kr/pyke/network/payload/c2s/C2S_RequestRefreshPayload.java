@@ -8,7 +8,7 @@ import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.util.PLATFORM;
-import kr.pyke.util.constants.COLOR;
+import kr.pyke.type.COLOR;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;

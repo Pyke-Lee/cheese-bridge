@@ -7,7 +7,7 @@ import kr.pyke.client.BridgeAuthServer;
 import kr.pyke.client.PykeLibClient;
 import kr.pyke.client.chzzk.ChzzkManager;
 import kr.pyke.client.soop.SoopManager;
-import kr.pyke.util.constants.COLOR;
+import kr.pyke.type.COLOR;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.Minecraft;
