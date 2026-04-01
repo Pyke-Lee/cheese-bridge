@@ -9,7 +9,11 @@ import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class BridgeDataState extends SavedData {
     public record TokenInfo(String accessToken, String refreshToken) {
@@ -56,7 +60,7 @@ public class BridgeDataState extends SavedData {
 
     public static final SavedDataType<BridgeDataState> TYPE = new SavedDataType<>("cheese_bridge", BridgeDataState::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
 
-    public final Map<UUID, Map<PLATFORM, TokenInfo>> playerTokens = new HashMap<>();
+    private final Map<UUID, Map<PLATFORM, TokenInfo>> playerTokens = new HashMap<>();
 
     public BridgeDataState() { }
 

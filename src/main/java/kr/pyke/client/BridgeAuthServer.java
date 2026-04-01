@@ -26,15 +26,12 @@ public class BridgeAuthServer {
 
                 if (query != null) {
                     for (String pair : query.split("&")) {
-                        String[] kv = pair.split("=");
-                        if (kv.length == 2) {
-                            if (kv[0].equals("code")) {
-                                code = kv[1];
-                            }
-                            else if (kv[0].equals("state")) {
-                                state = kv[1];
-                            }
-                        }
+                        int idx = pair.indexOf("=");
+                        if (idx <= 0) { continue; }
+                        String key = pair.substring(0, idx);
+                        String value = pair.substring(idx + 1);
+                        if (key.equals("code")) { code = value; }
+                        else if (key.equals("state")) { state = value; }
                     }
                 }
 
@@ -57,7 +54,8 @@ public class BridgeAuthServer {
                 }
 
                 new Thread(() -> {
-                    try { Thread.sleep(1000); } catch (Exception ignored) {}
+                    try { Thread.sleep(1000); }
+                    catch (Exception ignored) {}
                     stop();
                 }).start();
             });

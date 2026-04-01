@@ -2,8 +2,7 @@ package kr.pyke.network.payload.c2s;
 
 import kr.pyke.CheeseBridge;
 import kr.pyke.PykeLib;
-import kr.pyke.client.PykeLibClient;
-import kr.pyke.config.CheeseBridgeConfig;
+import kr.pyke.command.DonationCommand;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
@@ -17,8 +16,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.UUID;
 
 public record C2S_RequestRefreshPayload(String platformName) implements CustomPacketPayload {
     public static final Type<C2S_RequestRefreshPayload> ID = new Type<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_request_refresh"));
@@ -54,18 +51,7 @@ public record C2S_RequestRefreshPayload(String platformName) implements CustomPa
 
             CheeseBridge.LOGGER.warn("[갱신] 토큰 갱신 불가. 재인증을 요청합니다.");
 
-            String clientId;
-            String url;
-            if (platform == PLATFORM.CHZZK) {
-                clientId = CheeseBridgeConfig.DATA.chzzk.clientID;
-                String authState = UUID.randomUUID().toString();
-                url = String.format("https://chzzk.naver.com/account-interlock?clientId=%s&redirectUri=%s&state=%s", clientId, "http://localhost:8080/callback", authState);
-            }
-            else {
-                clientId = CheeseBridgeConfig.DATA.soop.clientID;
-                url = String.format("https://openapi.sooplive.com/auth/code?client_id=%s&redirect_uri=%s", clientId, "http://localhost:8080/callback");
-            }
-
+            String url = DonationCommand.authPlatform(platform);
             PykeLib.sendSystemMessage(java.util.List.of(context.player()), COLOR.RED.getColor(), "인증 세션이 만료되었습니다. 다시 로그인을 진행해주세요.");
             ServerPlayNetworking.send(context.player(), new S2C_AuthUrlPayload(url, platform.name()));
         });

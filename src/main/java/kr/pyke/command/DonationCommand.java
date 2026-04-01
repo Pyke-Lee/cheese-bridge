@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import kr.pyke.CheeseBridge;
 import kr.pyke.PykeLib;
 import kr.pyke.config.CheeseBridgeConfig;
 import kr.pyke.integration.BridgeDataState;
@@ -101,22 +102,26 @@ public class DonationCommand {
                 ServerPlayNetworking.send(player, new S2C_FinalTokenPayload(token.accessToken(), platform.name()));
             }
             else {
-                String url;
-                if (platform == PLATFORM.CHZZK) {
-                    String authState = UUID.randomUUID().toString();
-                    url = String.format("https://chzzk.naver.com/account-interlock?clientId=%s&redirectUri=%s&state=%s",
-                        CheeseBridgeConfig.DATA.chzzk.clientID, "http://localhost:8080/callback", authState);
-                }
-                else {
-                    url = String.format("https://openapi.sooplive.com/auth/code?client_id=%s&redirect_uri=%s",
-                        CheeseBridgeConfig.DATA.soop.clientID, "http://localhost:8080/callback");
-                }
+                String url = authPlatform(platform);
                 ServerPlayNetworking.send(player, new S2C_AuthUrlPayload(url, platform.name()));
             }
             return 1;
         }
         catch (Exception e) {
+            CheeseBridge.LOGGER.error("명령어 실행 중 오류: ", e);
             return 0;
+        }
+    }
+
+    public static String authPlatform(PLATFORM platform) {
+        if (platform == PLATFORM.CHZZK) {
+            String authState = UUID.randomUUID().toString();
+            return String.format("https://chzzk.naver.com/account-interlock?clientId=%s&redirectUri=%s&state=%s",
+                CheeseBridgeConfig.DATA.chzzk.clientID, "http://localhost:8080/callback", authState);
+        }
+        else {
+            return String.format("https://openapi.sooplive.com/auth/code?client_id=%s&redirect_uri=%s&response_type=code",
+                CheeseBridgeConfig.DATA.soop.clientID, "http://localhost:8080/callback");
         }
     }
 }

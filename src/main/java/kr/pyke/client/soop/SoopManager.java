@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SoopManager {
     private static final SoopManager INSTANCE = new SoopManager();
+    private static final String SOOPLIVE_ROOT_DOMAIN = "sooplive.co.kr";
     private final Gson gson = new Gson();
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private WebSocketClient webSocket;
@@ -38,6 +39,16 @@ public class SoopManager {
 
     private SoopManager() { }
     public static SoopManager getInstance() { return INSTANCE; }
+
+    private static String buildWsUrl(String chatIp, int chatPort, String bjId) {
+        String[] octets = chatIp.split("\\.");
+        String hexIp = String.format("%02X%02X%02X%02X",
+            Integer.parseInt(octets[0]),
+            Integer.parseInt(octets[1]),
+            Integer.parseInt(octets[2]),
+            Integer.parseInt(octets[3]));
+        return String.format("wss://chat-%s.%s:%d/Websocket/%s", hexIp, SOOPLIVE_ROOT_DOMAIN, chatPort + 1, bjId);
+    }
 
     public void connect(String accessToken) {
         disconnect();
@@ -110,9 +121,11 @@ public class SoopManager {
                 this.ticket = data.get("key").getAsString();
 
                 JsonElement idElement = data.get("id");
-                this.bjId = idElement.isJsonObject() ? idElement.getAsJsonObject().get("userId").getAsString() : idElement.getAsString();
+                this.bjId = idElement.isJsonObject() ?
+                    idElement.getAsJsonObject().get("userId").getAsString() : idElement.getAsString();
 
-                String wsUrl = String.format("ws://%s:%d/Websocket/%s", chatIp, chatPort, bjId);
+                String wsUrl = buildWsUrl(chatIp, chatPort, bjId);
+                CheeseBridge.LOGGER.info("[SOOP] WebSocket 연결 시도: {}", wsUrl);
 
                 webSocket = new WebSocketClient(URI.create(wsUrl)) {
                     @Override
@@ -128,6 +141,7 @@ public class SoopManager {
 
                     @Override
                     public void onMessage(String message) {
+                        CheeseBridge.LOGGER.debug("[SOOP] 텍스트 프레임 수신: {}", message);
                     }
 
                     @Override
@@ -165,19 +179,17 @@ public class SoopManager {
     }
 
     private void handlePacket(int svc, String body) {
-        // CheeseBridge.LOGGER.info("[SOOP] handlePacket 호출됨 - 바디: {}", body);
-
         try {
             List<String> parts = SoopProtocol.parseBody(body);
             if (parts.isEmpty()) { return; }
 
-            if (!isLoggedIn && body.contains("|")) {
+            if (svc == SoopProtocol.SVC_LOGIN && !isLoggedIn) {
                 this.isLoggedIn = true;
                 CheeseBridge.LOGGER.info("[SOOP] 로그인 승인됨. 채널 입장 시도.");
                 List<String> joinBody = new ArrayList<>();
                 joinBody.add(chatNo);
                 joinBody.add(ticket);
-                joinBody.add("");
+                joinBody.add("5");
                 joinBody.add("");
                 joinBody.add("");
                 webSocket.send(SoopProtocol.makePacket(SoopProtocol.SVC_JOINCH, joinBody));
@@ -225,12 +237,13 @@ public class SoopManager {
             if (webSocket != null && webSocket.isOpen()) {
                 webSocket.send(SoopProtocol.makePacket(SoopProtocol.SVC_KEEPALIVE, new ArrayList<>()));
             }
-        }, 30, 30, TimeUnit.SECONDS);
+        }, 60, 60, TimeUnit.SECONDS);
     }
 
     private void stopKeepAlive() {
         if (scheduler != null) {
             scheduler.shutdownNow();
+            scheduler = null;
         }
     }
 
