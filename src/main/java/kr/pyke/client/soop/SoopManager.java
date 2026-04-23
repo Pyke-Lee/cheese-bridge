@@ -10,7 +10,6 @@ import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
 import kr.pyke.util.PLATFORM;
 import kr.pyke.util.SoopProtocol;
 import kr.pyke.util.constants.COLOR;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -70,7 +69,7 @@ public class SoopManager {
 
                     if (response.statusCode() == 401) {
                         CheeseBridge.LOGGER.warn("[SOOP] 401 토큰 만료 감지 -> 갱신 요청");
-                        ClientPlayNetworking.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
+                        C2S_RequestRefreshPayload.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
                     }
 
                     return;
@@ -82,7 +81,7 @@ public class SoopManager {
                     String error = json.get("error").getAsString();
                     if (error.equals("expired_token") || error.equals("invalid_token")) {
                         CheeseBridge.LOGGER.warn("[SOOP] 토큰 만료/유효하지 않음 ({}) -> 갱신 요청", error);
-                        ClientPlayNetworking.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
+                        C2S_RequestRefreshPayload.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
                         return;
                     }
                 }
@@ -100,7 +99,7 @@ public class SoopManager {
 
                     if (resultCode == -10) {
                         CheeseBridge.LOGGER.warn("[SOOP] 인증 실패(-10) -> 갱신 요청");
-                        ClientPlayNetworking.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
+                        C2S_RequestRefreshPayload.send(new C2S_RequestRefreshPayload(PLATFORM.SOOP.name()));
                     }
                     else if (resultCode == -1302) {
                         CheeseBridge.LOGGER.warn("[SOOP] 연동 실패: 방송 중이 아님");
@@ -228,7 +227,7 @@ public class SoopManager {
         String donationType = "별풍선";
 
         CheeseBridge.LOGGER.info("[SOOP] {} 정산 감지: {} ({}개)", donationType, nickname, amount);
-        ClientPlayNetworking.send(new C2S_DonationPayload(nickname, amount, donationType, "SOOP"));
+        C2S_DonationPayload.send(new C2S_DonationPayload(nickname, amount, donationType, "SOOP"));
     }
 
     private void startKeepAlive() {

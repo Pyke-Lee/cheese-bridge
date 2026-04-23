@@ -3,7 +3,6 @@ package kr.pyke.client;
 import com.sun.net.httpserver.HttpServer;
 import kr.pyke.CheeseBridge;
 import kr.pyke.network.payload.c2s.C2S_AuthCodePayload;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -38,7 +37,7 @@ public class BridgeAuthServer {
                 String response;
                 if (code != null) {
                     String finalState = (state != null) ? state : "state_ok";
-                    ClientPlayNetworking.send(new C2S_AuthCodePayload(code, finalState, expectedPlatform));
+                    C2S_AuthCodePayload.send(new C2S_AuthCodePayload(code, finalState, expectedPlatform));
                     response = "<html><head><meta charset='utf-8'></head><body style='text-align:center;'><h1>" + expectedPlatform + " 인증 완료!</h1></body></html>";
                 }
                 else {

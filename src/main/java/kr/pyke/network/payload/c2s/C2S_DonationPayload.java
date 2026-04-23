@@ -4,35 +4,44 @@ import kr.pyke.CheeseBridge;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.integration.DonationEvent;
 import kr.pyke.util.DonationLogger;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
-import org.jetbrains.annotations.NotNull;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
-public record C2S_DonationPayload(String donor, String donationAmount, String donationMessage, String platform) implements CustomPacketPayload {
-    public static final Type<C2S_DonationPayload> ID = new Type<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_donation"));
+public record C2S_DonationPayload(String donor, String donationAmount, String donationMessage, String platform) {
+    public static final ResourceLocation ID = new ResourceLocation(CheeseBridge.MOD_ID, "c2s_donation");
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, C2S_DonationPayload> STREAM_CODEC = StreamCodec.composite(
-        ByteBufCodecs.STRING_UTF8, C2S_DonationPayload::donor,
-        ByteBufCodecs.STRING_UTF8, C2S_DonationPayload::donationAmount,
-        ByteBufCodecs.STRING_UTF8, C2S_DonationPayload::donationMessage,
-        ByteBufCodecs.STRING_UTF8, C2S_DonationPayload::platform,
-        C2S_DonationPayload::new
-    );
+    public static void encode(FriendlyByteBuf buf, C2S_DonationPayload payload) {
+        buf.writeUtf(payload.donor);
+        buf.writeUtf(payload.donationAmount);
+        buf.writeUtf(payload.donationMessage);
+        buf.writeUtf(payload.platform);
+    }
 
-    @Override public @NotNull Type<? extends CustomPacketPayload> type() { return ID; }
+    public static C2S_DonationPayload decode(FriendlyByteBuf buf) {
+        return new C2S_DonationPayload(buf.readUtf(), buf.readUtf(), buf.readUtf(), buf.readUtf());
+    }
 
-    public static void handle(C2S_DonationPayload payload, ServerPlayNetworking.Context context) {
-        String receiverName = context.player().getName().getString();
+    public static void send(C2S_DonationPayload payload) {
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        encode(buf, payload);
+        ClientPlayNetworking.send(ID, buf);
+    }
 
-        context.server().execute(() -> {
+    public static void handle(MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl handler, FriendlyByteBuf buf, PacketSender responseSender) {
+        C2S_DonationPayload payload = decode(buf);
+        String receiverName = player.getName().getString();
+
+        server.execute(() -> {
             try {
                 DonationLogger.logDonation(payload.donor(), receiverName, payload.donationAmount());
 
-                BridgeIntegration.triggerDonation(context.player(), new DonationEvent(payload.donor(), payload.donationAmount(), payload.donationMessage(), payload.platform()));
+                BridgeIntegration.triggerDonation(player, new DonationEvent(payload.donor(), payload.donationAmount(), payload.donationMessage(), payload.platform()));
             }
             catch (Exception e) { CheeseBridge.LOGGER.error("플레이어 {}의 후원 보상 처리 중 시스템 예외 발생:", receiverName, e); }
         });

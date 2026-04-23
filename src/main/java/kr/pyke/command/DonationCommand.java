@@ -15,7 +15,6 @@ import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.util.DonationLogger;
 import kr.pyke.util.PLATFORM;
 import kr.pyke.util.constants.COLOR;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -97,11 +96,11 @@ public class DonationCommand {
             BridgeDataState.TokenInfo token = state.getToken(player.getUUID(), platform);
 
             if (token != null) {
-                ServerPlayNetworking.send(player, new S2C_FinalTokenPayload(token.accessToken(), platform.name()));
+                S2C_FinalTokenPayload.send(player, new S2C_FinalTokenPayload(token.accessToken(), platform.name()));
             }
             else {
                 String url = authPlatform(platform);
-                ServerPlayNetworking.send(player, new S2C_AuthUrlPayload(url, platform.name()));
+                S2C_AuthUrlPayload.send(player, new S2C_AuthUrlPayload(url, platform.name()));
             }
             return 1;
         }

@@ -5,28 +5,37 @@ import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.util.PLATFORM;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
-import org.jetbrains.annotations.NotNull;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
-public record C2S_AuthCodePayload(String code, String state, String platformName) implements CustomPacketPayload {
-    public static final Type<C2S_AuthCodePayload> ID = new Type<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_auth_code"));
+public record C2S_AuthCodePayload(String code, String state, String platformName) {
+    public static final ResourceLocation ID = new ResourceLocation(CheeseBridge.MOD_ID, "c2s_auth_code");
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, C2S_AuthCodePayload> STREAM_CODEC = StreamCodec.composite(
-        ByteBufCodecs.STRING_UTF8, C2S_AuthCodePayload::code,
-        ByteBufCodecs.STRING_UTF8, C2S_AuthCodePayload::state,
-        ByteBufCodecs.STRING_UTF8, C2S_AuthCodePayload::platformName,
-        C2S_AuthCodePayload::new
-    );
+    public static void encode(FriendlyByteBuf buf, C2S_AuthCodePayload payload) {
+        buf.writeUtf(payload.code);
+        buf.writeUtf(payload.state);
+        buf.writeUtf(payload.platformName);
+    }
 
-    @Override public @NotNull Type<? extends CustomPacketPayload> type() { return ID; }
+    public static C2S_AuthCodePayload decode(FriendlyByteBuf buf) {
+        return new C2S_AuthCodePayload(buf.readUtf(), buf.readUtf(), buf.readUtf());
+    }
 
-    public static void handle(C2S_AuthCodePayload payload, ServerPlayNetworking.Context context) {
-        context.server().execute(() -> {
+    public static void send(C2S_AuthCodePayload payload) {
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        encode(buf, payload);
+        ClientPlayNetworking.send(ID, buf);
+    }
+
+    public static void handle(MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl handler, FriendlyByteBuf buf, PacketSender responseSender) {
+        C2S_AuthCodePayload payload = decode(buf);
+        server.execute(() -> {
             PLATFORM platform = PLATFORM.valueOf(payload.platformName());
             String jsonResponse = BridgeIntegration.exchangeCodeForToken(platform, payload.code(), payload.state());
 
@@ -34,10 +43,10 @@ public record C2S_AuthCodePayload(String code, String state, String platformName
                 BridgeDataState.TokenInfo tokenInfo = BridgeIntegration.parseTokenResponse(jsonResponse);
 
                 if (tokenInfo != null) {
-                    BridgeDataState state = BridgeDataState.getServerState(context.server());
-                    state.setToken(context.player().getUUID(), platform, tokenInfo);
+                    BridgeDataState state = BridgeDataState.getServerState(server);
+                    state.setToken(player.getUUID(), platform, tokenInfo);
 
-                    ServerPlayNetworking.send(context.player(), new S2C_FinalTokenPayload(tokenInfo.accessToken(), platform.name()));
+                    S2C_FinalTokenPayload.send(player, new S2C_FinalTokenPayload(tokenInfo.accessToken(), platform.name()));
                     CheeseBridge.LOGGER.info("[인증] {} 토큰 발급 및 저장 완료!", platform);
                 }
                 else {
