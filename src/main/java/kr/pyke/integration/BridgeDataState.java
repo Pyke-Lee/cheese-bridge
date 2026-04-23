@@ -4,18 +4,14 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import kr.pyke.CheeseBridge;
 import kr.pyke.util.PLATFORM;
-import net.minecraft.resources.Identifier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class BridgeDataState extends SavedData {
     public record TokenInfo(String accessToken, String refreshToken) {
@@ -60,11 +56,16 @@ public class BridgeDataState extends SavedData {
         }
     );
 
-    public static final SavedDataType<BridgeDataState> TYPE = new SavedDataType<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "cheese_bridge"), BridgeDataState::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
+    public static final SavedDataType<BridgeDataState> TYPE = new SavedDataType<>(new ResourceLocation(CheeseBridge.MOD_ID, "cheese_bridge"), BridgeDataState::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
 
     private final Map<UUID, Map<PLATFORM, TokenInfo>> playerTokens = new HashMap<>();
 
     public BridgeDataState() { }
+
+    @Override
+    public CompoundTag save(CompoundTag compoundTag) {
+        return null;
+    }
 
     public TokenInfo getToken(UUID uuid, PLATFORM platform) {
         return playerTokens.getOrDefault(uuid, new HashMap<>()).get(platform);

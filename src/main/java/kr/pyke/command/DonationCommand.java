@@ -14,7 +14,7 @@ import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.util.DonationLogger;
 import kr.pyke.util.PLATFORM;
-import kr.pyke.type.COLOR;
+import kr.pyke.util.constants.COLOR;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -23,8 +23,6 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permission;
-import net.minecraft.server.permissions.PermissionLevel;
 
 import java.util.List;
 import java.util.Objects;
@@ -35,7 +33,7 @@ public class DonationCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context, Commands.CommandSelection selection) {
         dispatcher.register(Commands.literal("후원")
-            .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(2))))
+            .requires(source -> source.hasPermission(2))
             .then(Commands.argument("targetPlayer", EntityArgument.player())
                 .then(Commands.argument("platform", StringArgumentType.string())
                     .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(List.of("\"치지직\"", "\"숲\""), builder))
