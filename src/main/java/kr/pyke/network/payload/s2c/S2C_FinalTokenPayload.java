@@ -4,28 +4,37 @@ import kr.pyke.CheeseBridge;
 import kr.pyke.client.chzzk.ChzzkManager;
 import kr.pyke.client.soop.SoopManager;
 import kr.pyke.util.PLATFORM;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
-import org.jetbrains.annotations.NotNull;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 
-public record S2C_FinalTokenPayload(String accessToken, String platformName) implements CustomPacketPayload {
-    public static final Type<S2C_FinalTokenPayload> ID = new Type<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "s2c_final_token"));
+public record S2C_FinalTokenPayload(String accessToken, String platformName) {
+    public static final ResourceLocation ID = new ResourceLocation(CheeseBridge.MOD_ID, "s2c_final_token");
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, S2C_FinalTokenPayload> STREAM_CODEC = StreamCodec.composite(
-        ByteBufCodecs.STRING_UTF8, S2C_FinalTokenPayload::accessToken,
-        ByteBufCodecs.STRING_UTF8, S2C_FinalTokenPayload::platformName,
-        S2C_FinalTokenPayload::new
-    );
+    public static void encode(FriendlyByteBuf buf, S2C_FinalTokenPayload payload) {
+        buf.writeUtf(payload.accessToken);
+        buf.writeUtf(payload.platformName);
+    }
 
-    @Override public @NotNull Type<? extends CustomPacketPayload> type() { return ID; }
+    public static S2C_FinalTokenPayload decode(FriendlyByteBuf buf) {
+        return new S2C_FinalTokenPayload(buf.readUtf(), buf.readUtf());
+    }
 
-    public static void handle(S2C_FinalTokenPayload payload, ClientPlayNetworking.Context context) {
+    public static void send(ServerPlayer player, S2C_FinalTokenPayload payload) {
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        encode(buf, payload);
+        ServerPlayNetworking.send(player, ID, buf);
+    }
+
+    public static void handle(Minecraft client, ClientPacketListener handler, FriendlyByteBuf buf, PacketSender responseSender) {
+        S2C_FinalTokenPayload payload = decode(buf);
         CheeseBridge.LOGGER.info("[디버그] 클라이언트: 토큰 패킷 도착함! -> {} (Platform: {})", payload.accessToken(), payload.platformName());
-        context.client().execute(() -> {
+        client.execute(() -> {
             PLATFORM platform = PLATFORM.valueOf(payload.platformName());
 
             if (platform == PLATFORM.CHZZK) {

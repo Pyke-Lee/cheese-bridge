@@ -10,7 +10,6 @@ import kr.pyke.network.payload.c2s.C2S_DonationPayload;
 import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
 import kr.pyke.util.PLATFORM;
 import kr.pyke.util.constants.COLOR;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 
 import java.net.URI;
@@ -41,7 +40,7 @@ public class ChzzkManager {
                 HttpResponse<String> authResponse = httpClient.send(authRequest, HttpResponse.BodyHandlers.ofString());
 
                 if (authResponse.statusCode() == 401) {
-                    ClientPlayNetworking.send(new C2S_RequestRefreshPayload(PLATFORM.CHZZK.name()));
+                    C2S_RequestRefreshPayload.send(new C2S_RequestRefreshPayload(PLATFORM.CHZZK.name()));
                     return;
                 }
                 if (authResponse.statusCode() != 200) return;
@@ -77,7 +76,7 @@ public class ChzzkManager {
                         String amount = data.get("payAmount").getAsString();
                         String text = data.has("donationText") ? data.get("donationText").getAsString() : "";
                         String nickname = data.has("donatorNickname") ? data.get("donatorNickname").getAsString() : "익명";
-                        ClientPlayNetworking.send(new C2S_DonationPayload(nickname, amount, text, "CHZZK"));
+                        C2S_DonationPayload.send(new C2S_DonationPayload(nickname, amount, text, "CHZZK"));
                     }
                     catch (Exception e) { CheeseBridge.LOGGER.error("후원 처리 오류", e); }
                 });

@@ -10,6 +10,7 @@ import kr.pyke.client.soop.SoopManager;
 import kr.pyke.util.constants.COLOR;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 
 import java.net.URI;
