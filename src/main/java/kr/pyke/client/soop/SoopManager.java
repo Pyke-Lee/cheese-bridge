@@ -198,7 +198,7 @@ public class SoopManager {
             }
 
             if (svc == SoopProtocol.SVC_SENDBALLOON || svc == SoopProtocol.SVC_SENDBALLOONSUB) {
-                int offset = parts.getFirst().isEmpty() ? 1 : 0;
+                int offset = parts.get(0).isEmpty() ? 1 : 0;
 
                 if (parts.size() >= 4 + offset) {
                     String potentialAmount = parts.get(3 + offset);

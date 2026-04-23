@@ -37,12 +37,6 @@ public class BridgeDataState extends SavedData {
 
     private static final Codec<List<TokenEntry>> ENTRIES_CODEC = TokenEntry.CODEC.listOf();
 
-    public static final SavedData.Factory<BridgeDataState> FACTORY = new SavedData.Factory<>(
-        BridgeDataState::new,
-        BridgeDataState::load,
-        DataFixTypes.SAVED_DATA_COMMAND_STORAGE
-    );
-
     private final Map<UUID, Map<PLATFORM, TokenInfo>> playerTokens = new HashMap<>();
 
     public BridgeDataState() { }
@@ -95,6 +89,6 @@ public class BridgeDataState extends SavedData {
 
     public static BridgeDataState getServerState(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
-        return overworld.getDataStorage().computeIfAbsent(FACTORY, DATA_NAME);
+        return overworld.getDataStorage().computeIfAbsent(BridgeDataState::load, BridgeDataState::new, DATA_NAME);
     }
 }

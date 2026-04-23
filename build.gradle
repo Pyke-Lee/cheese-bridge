@@ -12,19 +12,26 @@ base {
 
 repositories {
 	maven { url = uri("https://jitpack.io") }
+	maven {
+		name = 'ParchmentMC'
+		url = 'https://maven.parchmentmc.org'
+	}
 }
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
+	mappings loom.layered() {
+		officialMojangMappings()
+		parchment("org.parchmentmc.data:parchment-1.20.1:2023.09.03@zip")
+	}
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	// Pyke Lib
-	implementation("com.github.Pyke-Lee:PykeLib:${project.pyke_lib_version}")
+	modImplementation("com.github.Pyke-Lee:PykeLib:${project.pyke_lib_version}")
 
 	// io.socket
 	implementation "io.socket:socket.io-client:${project.io_socket_version}"
