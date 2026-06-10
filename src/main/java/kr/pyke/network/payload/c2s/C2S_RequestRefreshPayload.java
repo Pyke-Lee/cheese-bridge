@@ -8,17 +8,17 @@ import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.util.PLATFORM;
-import kr.pyke.util.constants.COLOR;
+import kr.pyke.type.COLOR;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public record C2S_RequestRefreshPayload(String platformName) implements CustomPacketPayload {
-    public static final Type<C2S_RequestRefreshPayload> ID = new Type<>(Identifier.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_request_refresh"));
+    public static final Type<C2S_RequestRefreshPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_request_refresh"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, C2S_RequestRefreshPayload> STREAM_CODEC = StreamCodec.composite(
         ByteBufCodecs.STRING_UTF8, C2S_RequestRefreshPayload::platformName,
