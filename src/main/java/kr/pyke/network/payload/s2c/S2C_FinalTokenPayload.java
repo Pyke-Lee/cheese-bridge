@@ -3,7 +3,7 @@ package kr.pyke.network.payload.s2c;
 import kr.pyke.CheeseBridge;
 import kr.pyke.client.chzzk.ChzzkManager;
 import kr.pyke.client.soop.SoopManager;
-import kr.pyke.util.PLATFORM;
+import kr.pyke.type.PLATFORM;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
