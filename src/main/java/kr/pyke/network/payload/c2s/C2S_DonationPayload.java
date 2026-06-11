@@ -3,6 +3,7 @@ package kr.pyke.network.payload.c2s;
 import kr.pyke.CheeseBridge;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.integration.DonationEvent;
+import kr.pyke.type.PLATFORM;
 import kr.pyke.util.DonationLogger;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -11,6 +12,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public record C2S_DonationPayload(String donor, String donationAmount, String donationMessage, String platform) implements CustomPacketPayload {
     public static final Type<C2S_DonationPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath(CheeseBridge.MOD_ID, "c2s_donation"));
@@ -32,7 +35,11 @@ public record C2S_DonationPayload(String donor, String donationAmount, String do
             try {
                 DonationLogger.logDonation(payload.donor(), receiverName, payload.donationAmount());
 
-                BridgeIntegration.triggerDonation(context.player(), new DonationEvent(payload.donor(), payload.donationAmount(), payload.donationMessage(), payload.platform()));
+                PLATFORM platform = PLATFORM.NONE;
+                if (Objects.equals(payload.platform(), "SOOP")) { platform = PLATFORM.SOOP; }
+                else if (Objects.equals(payload.platform(), "CHZZK")) { platform = PLATFORM.CHZZK; }
+
+                BridgeIntegration.triggerDonation(context.player(), new DonationEvent(payload.donor(), payload.donationAmount(), payload.donationMessage(), platform));
             }
             catch (Exception e) { CheeseBridge.LOGGER.error("플레이어 {}의 후원 보상 처리 중 시스템 예외 발생:", receiverName, e); }
         });

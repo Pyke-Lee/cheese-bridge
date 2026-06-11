@@ -14,7 +14,7 @@ import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.type.COLOR;
 import kr.pyke.util.DonationLogger;
-import kr.pyke.util.PLATFORM;
+import kr.pyke.type.PLATFORM;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -63,7 +63,7 @@ public class DonationCommand {
             String managerName = Objects.requireNonNull(source.getPlayer()).getName().getString();
             String targetPlayerName = targetPlayer.getDisplayName().getString();
 
-            String platformTag = platformArg.equals("숲") ? "SOOP" : "CHZZK";
+            PLATFORM platformTag = platformArg.equals("숲") ? PLATFORM.SOOP : PLATFORM.CHZZK;
 
             source.getServer().execute(() -> {
                 DonationLogger.logDonationManager(targetPlayerName, String.valueOf(amount), managerName);

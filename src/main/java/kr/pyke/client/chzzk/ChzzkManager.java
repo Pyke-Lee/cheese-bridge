@@ -9,7 +9,7 @@ import kr.pyke.client.PykeLibClient;
 import kr.pyke.network.payload.c2s.C2S_DonationPayload;
 import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
 import kr.pyke.type.COLOR;
-import kr.pyke.util.PLATFORM;
+import kr.pyke.type.PLATFORM;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 
