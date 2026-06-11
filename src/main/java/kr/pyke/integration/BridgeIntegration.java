@@ -5,7 +5,7 @@ import com.google.gson.JsonObject;
 import kr.pyke.CheeseBridge;
 import kr.pyke.config.CheeseBridgeConfig;
 import kr.pyke.integration.event.DonationReceivedCallback;
-import kr.pyke.util.PLATFORM;
+import kr.pyke.type.PLATFORM;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.net.URI;

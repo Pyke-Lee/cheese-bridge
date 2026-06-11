@@ -3,7 +3,7 @@ package kr.pyke.integration;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import kr.pyke.CheeseBridge;
-import kr.pyke.util.PLATFORM;
+import kr.pyke.type.PLATFORM;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
