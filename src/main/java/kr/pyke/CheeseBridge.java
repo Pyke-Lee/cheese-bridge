@@ -5,7 +5,7 @@ import kr.pyke.config.CheeseBridgeConfig;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.network.CheeseBridgePacket;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
-import kr.pyke.util.PLATFORM;
+import kr.pyke.type.PLATFORM;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;

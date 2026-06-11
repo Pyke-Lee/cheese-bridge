@@ -6,7 +6,7 @@
 	"description": "A Minecraft mod that integrates Chzzk and Soop donations with the game in real-time.",
 	"authors": [ "Pyke_Lee" ],
 	"contact": { },
-	"license": "LGPL 3.0",
+	"license": "ARR",
 	"icon": "assets/cheese-bridge/icon.png",
 	"environment": "*",
 	"entrypoints": {
