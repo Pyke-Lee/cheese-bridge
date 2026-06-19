@@ -51,6 +51,8 @@ public class SoopManager {
     private volatile boolean manualDisconnect = false;  // 사용자가 의도적으로 끊었는지
     private volatile int reconnectAttempts = 0;         // 연속 실패 횟수(백오프 계산용)
     private volatile int refreshAttempts = 0;           // 이번 끊김 사이클에서 갱신 시도 횟수
+    private volatile boolean announceOnJoin = false;    // 사용자가 직접 연동했을 때만 "연동 성공" 메시지 노출
+    private volatile boolean silentReconnect = false;   // 토큰 갱신 등 내부 복구로 connect()가 재호출될 때 메시지 억제
 
     private SoopManager() { }
     public static SoopManager getInstance() { return INSTANCE; }
@@ -69,6 +71,9 @@ public class SoopManager {
         this.manualDisconnect = false;
         this.reconnectAttempts = 0;
         this.refreshAttempts = 0;
+        // 토큰 갱신 등 내부 복구로 인한 재연결이면 메시지를 띄우지 않는다.
+        this.announceOnJoin = !silentReconnect;
+        this.silentReconnect = false;
         this.accessToken = accessToken;
         doConnect();
     }
@@ -217,6 +222,7 @@ public class SoopManager {
         }
 
         refreshAttempts++;
+        this.silentReconnect = true;  // 갱신 성공 후 따라오는 connect()는 재연결이므로 메시지 억제
         CheeseBridge.LOGGER.warn("[SOOP] 토큰 만료 감지({}) -> 갱신 요청", reason);
         // 서버에 갱신 요청. 서버는 갱신 후 S2C_FinalTokenPayload 로 새 토큰을 내려보내고,
         // 클라이언트의 S2C_FinalTokenPayload.handle 에서 SoopManager.connect(newToken) 이 다시 호출된다.
@@ -264,7 +270,10 @@ public class SoopManager {
                 joinBody.add("");
                 joinBody.add("");
                 webSocket.send(SoopProtocol.makePacket(SoopProtocol.SVC_JOINCH, joinBody));
-                Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.LIME.getColor(), "숲(SOOP) 연동 성공!"));
+                if (announceOnJoin) {
+                    announceOnJoin = false;  // 최초 연동 시 1회만 노출, 이후 재연결에서는 표시 안 함
+                    Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.LIME.getColor(), "숲(SOOP) 연동 성공!"));
+                }
                 return;
             }
 
