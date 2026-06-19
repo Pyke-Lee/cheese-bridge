@@ -12,8 +12,8 @@ import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.integration.DonationEvent;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
-import kr.pyke.util.DonationLogger;
 import kr.pyke.type.PLATFORM;
+import kr.pyke.util.DonationLogger;
 import kr.pyke.util.constants.COLOR;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -23,8 +23,8 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 public class DonationCommand {
@@ -33,7 +33,7 @@ public class DonationCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context, Commands.CommandSelection selection) {
         dispatcher.register(Commands.literal("후원")
             .requires(source -> source.hasPermission(2))
-            .then(Commands.argument("targetPlayer", EntityArgument.player())
+            .then(Commands.argument("targets", EntityArgument.players())
                 .then(Commands.argument("platform", StringArgumentType.string())
                     .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(List.of("\"치지직\"", "\"숲\""), builder))
                     .then(Commands.argument("donationAmount", IntegerArgumentType.integer(0))
@@ -53,22 +53,24 @@ public class DonationCommand {
 
     private static int executeManualDonation(CommandContext<CommandSourceStack> ctx) {
         try {
-            ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "targetPlayer");
+            Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
             String platformArg = StringArgumentType.getString(ctx, "platform");
             int amount = IntegerArgumentType.getInteger(ctx, "donationAmount");
-            ServerPlayer player = ctx.getSource().getPlayerOrException();
 
             CommandSourceStack source = ctx.getSource();
-            String managerName = Objects.requireNonNull(source.getPlayer()).getName().getString();
-            String targetPlayerName = targetPlayer.getDisplayName().getString();
-
+            ServerPlayer player = source.getPlayerOrException();
+            String managerName = player.getName().getString();
             PLATFORM platformTag = platformArg.equals("숲") ? PLATFORM.SOOP : PLATFORM.CHZZK;
 
-            source.getServer().execute(() -> {
-                DonationLogger.logDonationManager(targetPlayerName, String.valueOf(amount), managerName);
-                BridgeIntegration.triggerDonation(targetPlayer, new DonationEvent("운영자", String.valueOf(amount), "수동 지급", platformTag));
-                PykeLib.sendSystemMessage(player, COLOR.LIME.getColor(), String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetPlayerName, amount, platformTag));
-            });
+            for (ServerPlayer target : targets) {
+                String targetName = target.getDisplayName().getString();
+
+                source.getServer().execute(() -> {
+                    DonationLogger.logDonationManager(targetName, String.valueOf(amount), managerName);
+                    BridgeIntegration.triggerDonation(target, new DonationEvent("운영자", String.valueOf(amount), "수동 지급", platformTag));
+                    PykeLib.sendSystemMessage(player, COLOR.LIME.getColor(), String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetName, amount, platformTag));
+                });
+            }
 
             return 1;
         }
