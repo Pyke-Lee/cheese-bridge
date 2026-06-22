@@ -4,10 +4,9 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.context.CommandContext;
 import kr.pyke.CheeseBridge;
 import kr.pyke.client.BridgeAuthServer;
-import kr.pyke.client.PykeLibClient;
+import kr.pyke.client.CheeseBridgeClient;
 import kr.pyke.client.chzzk.ChzzkManager;
 import kr.pyke.client.soop.SoopManager;
-import kr.pyke.util.constants.COLOR;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.Util;
@@ -30,7 +29,7 @@ public class IntegrationCommand {
                 ChzzkManager.getInstance().disconnect();
                 SoopManager.getInstance().disconnect();
                 AUTH_SERVER.stop();
-                PykeLibClient.sendSystemMessage(COLOR.RED.getColor(), "모든 후원 연동이 해제되었습니다.");
+                CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "모든 후원 연동이 해제되었습니다.");
             }
             catch (Exception e) { CheeseBridge.LOGGER.error("연동 해제 명령어 실행 중 오류 발생: ", e); }
         });
@@ -41,7 +40,7 @@ public class IntegrationCommand {
     public static void startAuthProcess(String url, String platformName) {
         AUTH_SERVER.start(platformName);
         openUrl(url);
-        PykeLibClient.sendSystemMessage(COLOR.LIME.getColor(), platformName + " 로그인을 진행해주세요.");
+        CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, platformName + " 로그인을 진행해주세요.");
     }
 
     private static void openUrl(String url) {

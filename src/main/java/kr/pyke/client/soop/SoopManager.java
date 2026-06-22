@@ -4,12 +4,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import kr.pyke.CheeseBridge;
-import kr.pyke.client.PykeLibClient;
+import kr.pyke.client.CheeseBridgeClient;
 import kr.pyke.network.payload.c2s.C2S_DonationPayload;
 import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
 import kr.pyke.type.PLATFORM;
 import kr.pyke.util.SoopProtocol;
-import kr.pyke.util.constants.COLOR;
 import net.minecraft.client.Minecraft;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -132,13 +131,11 @@ public class SoopManager {
                     }
                     else if (resultCode == -1302) {
                         CheeseBridge.LOGGER.warn("[SOOP] 연동 실패: 방송 중이 아님");
-                        Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.RED.getColor(),
-                            "숲(SOOP) 연동 실패: 생방송 중일 때만 연동이 가능합니다."));
+                        Minecraft.getInstance().execute(() -> CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "숲(SOOP) 연동 실패: 생방송 중일 때만 연동이 가능합니다."));
                     }
                     else {
                         CheeseBridge.LOGGER.error("[SOOP] API 상세 에러: {} (코드: {})", errorMsg, resultCode);
-                        Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.RED.getColor(),
-                            "숲(SOOP) API 오류: " + errorMsg));
+                        Minecraft.getInstance().execute(() -> CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "숲(SOOP) API 오류: " + errorMsg));
                         scheduleReconnect("result " + resultCode);
                     }
                     return;
@@ -216,8 +213,7 @@ public class SoopManager {
 
         if (refreshAttempts >= MAX_REFRESH_RETRY) {
             CheeseBridge.LOGGER.warn("[SOOP] 토큰 갱신 재시도 한도 초과({}). 재인증 필요.", reason);
-            Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.RED.getColor(),
-                "숲(SOOP) 인증이 만료되었습니다. /후원연동 숲 으로 다시 연결해주세요."));
+            Minecraft.getInstance().execute(() -> CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "숲(SOOP) 인증이 만료되었습니다. /후원연동 숲 으로 다시 연결해주세요."));
             return;
         }
 
@@ -272,7 +268,7 @@ public class SoopManager {
                 webSocket.send(SoopProtocol.makePacket(SoopProtocol.SVC_JOINCH, joinBody));
                 if (announceOnJoin) {
                     announceOnJoin = false;  // 최초 연동 시 1회만 노출, 이후 재연결에서는 표시 안 함
-                    Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.LIME.getColor(), "숲(SOOP) 연동 성공!"));
+                    Minecraft.getInstance().execute(() -> CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "숲(SOOP) 연동 성공!"));
                 }
                 return;
             }

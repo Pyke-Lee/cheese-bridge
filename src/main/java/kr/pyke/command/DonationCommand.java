@@ -5,7 +5,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import kr.pyke.CheeseBridge;
-import kr.pyke.PykeLib;
 import kr.pyke.config.CheeseBridgeConfig;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
@@ -14,7 +13,6 @@ import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.type.PLATFORM;
 import kr.pyke.util.DonationLogger;
-import kr.pyke.util.constants.COLOR;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -68,7 +66,7 @@ public class DonationCommand {
                 source.getServer().execute(() -> {
                     DonationLogger.logDonationManager(targetName, String.valueOf(amount), managerName);
                     BridgeIntegration.triggerDonation(target, new DonationEvent("운영자", String.valueOf(amount), "수동 지급", platformTag));
-                    PykeLib.sendSystemMessage(player, COLOR.LIME.getColor(), String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetName, amount, platformTag));
+                    CheeseBridge.sendPersonalMessage(player, String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetName, amount, platformTag));
                 });
             }
 

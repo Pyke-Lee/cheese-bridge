@@ -5,11 +5,10 @@ import com.google.gson.JsonObject;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import kr.pyke.CheeseBridge;
-import kr.pyke.client.PykeLibClient;
+import kr.pyke.client.CheeseBridgeClient;
 import kr.pyke.network.payload.c2s.C2S_DonationPayload;
 import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
 import kr.pyke.type.PLATFORM;
-import kr.pyke.util.constants.COLOR;
 import net.minecraft.client.Minecraft;
 
 import java.net.URI;
@@ -54,9 +53,7 @@ public class ChzzkManager {
 
                 socket = IO.socket(socketUrl, options);
 
-                socket.on(Socket.EVENT_CONNECT, args -> {
-                    Minecraft.getInstance().execute(() -> PykeLibClient.sendSystemMessage(COLOR.LIME.getColor(), "치지직 연결 성공"));
-                });
+                socket.on(Socket.EVENT_CONNECT, args -> Minecraft.getInstance().execute(() -> CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "치지직 연결 성공")));
 
                 socket.on("SYSTEM", args -> {
                     try {
