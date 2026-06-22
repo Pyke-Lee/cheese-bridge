@@ -214,7 +214,7 @@ public class SoopManager {
 
         if (refreshAttempts >= MAX_REFRESH_RETRY) {
             CheeseBridge.LOGGER.warn("[SOOP] 토큰 갱신 재시도 한도 초과({}). 재인증 필요.", reason);
-            Minecraft.getInstance().execute(() -> CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "숲(SOOP) 인증이 만료되었습니다. /후원연동 숲 으로 다시 연결해주세요."));
+            Minecraft.getInstance().execute(() -> CheeseBridgeClient.sendMessage(Minecraft.getInstance().player, "숲(SOOP) 인증이 만료되었습니다. /후원연동 \"숲\" 으로 다시 연결해주세요."));
             return;
         }
 
