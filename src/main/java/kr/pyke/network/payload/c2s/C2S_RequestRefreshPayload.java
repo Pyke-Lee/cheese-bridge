@@ -1,14 +1,12 @@
 package kr.pyke.network.payload.c2s;
 
 import kr.pyke.CheeseBridge;
-import kr.pyke.PykeLib;
 import kr.pyke.command.DonationCommand;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.type.PLATFORM;
-import kr.pyke.type.COLOR;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -52,7 +50,7 @@ public record C2S_RequestRefreshPayload(String platformName) implements CustomPa
             CheeseBridge.LOGGER.warn("[갱신] 토큰 갱신 불가. 재인증을 요청합니다.");
 
             String url = DonationCommand.authPlatform(platform);
-            PykeLib.sendSystemMessage(java.util.List.of(context.player()), COLOR.RED.getColor(), "인증 세션이 만료되었습니다. 다시 로그인을 진행해주세요.");
+            CheeseBridge.sendPersonalMessage(context.player(), "인증 세션이 만료되었습니다. 다시 로그인을 진행해주세요.");
             ServerPlayNetworking.send(context.player(), new S2C_AuthUrlPayload(url, platform.name()));
         });
     }

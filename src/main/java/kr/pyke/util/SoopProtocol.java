@@ -15,8 +15,11 @@ public class SoopProtocol {
     public static final int SVC_JOINCH = 2;
     public static final int SVC_CHATMESG = 5;
     public static final int SVC_SDK_LOGIN = 16;
-    public static final int SVC_SENDBALLOON = 18;
-    public static final int SVC_SENDBALLOONSUB = 33;
+    public static final int SVC_SENDBALLOON = 18;       // 일반 별풍선
+    public static final int SVC_SENDBALLOONSUB = 33;    // 중계방 별풍선
+    public static final int SVC_VIDEO_BALLOON = 105;    // 영상풍선
+    public static final int SVC_MISSION = 121;          // 대결/도전 미션 (JSON, type 으로 구분)
+    public static final int SVC_MISSION_SETTLE = 125;   // 도전미션 정산 후원자 목록 (미사용)
 
     public static byte[] makePacket(int serviceCode, List<String> bodyParts) {
         StringBuilder bodyBuilder = new StringBuilder();

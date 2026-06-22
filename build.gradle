@@ -22,9 +22,6 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	// Pyke Lib
-	implementation("com.github.Pyke-Lee:PykeLib:${project.pyke_lib_version}")
-
 	// io.socket
 	implementation "io.socket:socket.io-client:${project.io_socket_version}"
 	include "io.socket:socket.io-client:${project.io_socket_version}"
