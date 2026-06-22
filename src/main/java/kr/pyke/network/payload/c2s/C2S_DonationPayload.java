@@ -5,6 +5,7 @@ import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.integration.DonationEvent;
 import kr.pyke.type.PLATFORM;
 import kr.pyke.util.DonationLogger;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
