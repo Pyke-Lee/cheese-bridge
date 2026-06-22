@@ -275,8 +275,7 @@ public class SoopManager {
             }
 
             // 수신 body 는 항상 구분자(\f)로 시작하므로 parts.get(0) 은 빈 문자열 -> base=1.
-            int base = parts.get(0).isEmpty() ? 1 : 0;
-
+            int base = parts.getFirst().isEmpty() ? 1 : 0;
             // 일반 별풍선: SDK 기준 e[2]=nick, e[3]=count
             if (svc == SoopProtocol.SVC_SENDBALLOON) {
                 emitBalloon(parts, base + 2, base + 3, "별풍선");

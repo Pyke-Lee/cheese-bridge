@@ -27,7 +27,7 @@ public class CheeseBridgeClient implements ClientModInitializer {
 
     public static void sendMessage(Player player, String message) {
         if (player == null) { return; }
-        Component component = CheeseBridge.parseComponent(message);
+        Component component = Component.literal("§6[SYSTEM]§r ").append(CheeseBridge.parseComponent(message));
 
         player.sendSystemMessage(component);
     }
