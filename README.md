@@ -36,3 +36,47 @@ https://developers.chzzk.naver.com/
 
 ## SOOP API 발급
 https://developers.sooplive.co.kr/
+
+## MOD 개발자 사용법
+```
+repositories {
+	maven { url = uri("https://jitpack.io") }
+}
+```
+```
+dependencies {
+	modImplementation("com.github.erudites-dev:CheeseBridge:1.3.5-1.21.11")
+}
+```
+```
+DonationReceivedCallback.DONATION_RECEIVED.register((player, event) -> {
+    String name = player.getDisplayName().getString();  // 연동된 플레이어 이름
+    PLATFORM platform = event.platfor(); // 후원 플랫폼 SOOP/CHZZK
+    String sender = event.donor(); // 후원자
+    String message = event.donationMessage(); // 후원 메시지
+    int amount = event.getAmount(); // 금액 (숲: 별풍선 갯수/치지직: 치즈)
+    int krwAmount = amount; // 금액(원 기준)
+    String notification = "";
+
+    if (platform == PLATFORM.SOOP) {
+        krwAmount *= 100;
+        notification = String.format("별풍선 %,d개", amount);
+    }
+    else if (platform == PLATFORM.CHZZK) {
+        notification = String.format("%,d 치즈", amount);
+    }
+
+    // 5천원 (50개)
+    if (5000 == krwAmount) {
+        ItemStack itemStack = new ItemStack(Items.BREAD);
+        itemStack.setCount(3);
+
+        if (!player.addItem(itemStack)) {
+            player.drop(itemStack, false);
+        }
+        player.sendSystemMessage(Component.literal(String.format("§a%s§r님이 §b%s§r님에게 §e%s§r로 §6[ 빵 3개 ]§r를 후원합니다.", sender, name, notification)));
+        // 시청자님이 스트리머님에게 5,000 치즈로 [ 빵 3개 ]를 후원합니다.
+        // 시청자님이 스트리머님에게 별풍선 50개로 [ 빵 3개 ]를 후원합니다.
+    }
+});
+```
