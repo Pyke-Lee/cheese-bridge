@@ -44,8 +44,12 @@ const DonationReceivedCallback = Java.loadClass('kr.pyke.integration.event.Donat
 const PLATFORM = Java.loadClass('kr.pyke.type.PLATFORM')
 const ItemStack = Java.loadClass('net.minecraft.world.item.ItemStack')
 const Items = Java.loadClass('net.minecraft.world.item.Items')
+const EntityType = Java.loadClass('net.minecraft.world.entity.EntityType')
+const MobEffectInstance = Java.loadClass('net.minecraft.world.effect.MobEffectInstance')
+const MobEffects = Java.loadClass('net.minecraft.world.effect.MobEffects')
+const MobSpawnType = Java.loadClass('net.minecraft.world.entity.MobSpawnType')
 
-DonationReceivedCallback.DONATION_RECEIVED.register((player, event) => {
+DonationReceivedCallback.registerHandler((player, event) => {
     let name = player.getDisplayName().getString()
     let platform = event.platform()
     let sender = event.donor()
@@ -66,8 +70,17 @@ DonationReceivedCallback.DONATION_RECEIVED.register((player, event) => {
     // 1,000원
     if (krwAmount == 1000) {
         let stack = new ItemStack(Items.COOKED_BEEF, 3)
-        player.getInventory().add(stack)
+        if (player.addItem(stack)) {
+            player.drop(stack, false)
+        }
         rewardText = '구운 소고기 3개'
+    }
+    // 3,000원
+    else if (krwAmount == 3000) {
+        let level = player.serverLevel()
+        let pos = player.blockPosition()
+        EntityType.ZOMBIE.spawn(level, pos, MobSpawnType.EVENT)
+        rewardText = '좀비 소환'
     }
 
     if (rewardText) {
