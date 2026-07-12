@@ -76,7 +76,6 @@ public class BridgeDataState extends SavedData {
     }
 
     public static BridgeDataState getServerState(MinecraftServer server) {
-        ServerLevel overworld = server.overworld();
-        return overworld.getDataStorage().computeIfAbsent(TYPE);
+        return server.getDataStorage().computeIfAbsent(TYPE);
     }
 }
