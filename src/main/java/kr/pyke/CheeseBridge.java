@@ -27,6 +27,7 @@ public class CheeseBridge implements ModInitializer {
 	public void onInitialize() {
 		CheeseBridgeConfig.loadConfiguration();
 
+		CheeseBridgePacket.registerCodec();
 		CheeseBridgePacket.registerServer();
 
 		CommandRegistrationCallback.EVENT.register(DonationCommand::register);
