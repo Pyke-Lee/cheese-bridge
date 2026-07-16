@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
@@ -48,6 +49,10 @@ public class CheeseBridge implements ModInitializer {
 				}
 			});
 		});
+	}
+
+	public static Identifier id(String id) {
+		return Identifier.fromNamespaceAndPath(MOD_ID, id);
 	}
 
 	public static void sendPersonalMessage(ServerPlayer player, String message) {

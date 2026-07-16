@@ -1,8 +1,8 @@
 package kr.pyke.network.payload.s2c;
 
 import kr.pyke.CheeseBridge;
-import kr.pyke.client.chzzk.ChzzkManager;
-import kr.pyke.client.soop.SoopManager;
+import kr.pyke.client.manager.chzzk.ChzzkManager;
+import kr.pyke.client.manager.soop.SoopManager;
 import kr.pyke.type.PLATFORM;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.network.RegistryFriendlyByteBuf;

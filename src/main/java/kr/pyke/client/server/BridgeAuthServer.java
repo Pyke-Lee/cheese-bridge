@@ -1,4 +1,4 @@
-package kr.pyke.client;
+package kr.pyke.client.server;
 
 import com.sun.net.httpserver.HttpServer;
 import kr.pyke.CheeseBridge;

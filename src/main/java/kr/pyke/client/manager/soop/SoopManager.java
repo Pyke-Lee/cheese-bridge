@@ -1,10 +1,11 @@
-package kr.pyke.client.soop;
+package kr.pyke.client.manager.soop;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import kr.pyke.CheeseBridge;
 import kr.pyke.client.CheeseBridgeClient;
+import kr.pyke.client.state.ConnectionStatus;
 import kr.pyke.network.payload.c2s.C2S_DonationPayload;
 import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
 import kr.pyke.type.PLATFORM;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class SoopManager {
     private static final SoopManager INSTANCE = new SoopManager();
@@ -57,13 +59,95 @@ public class SoopManager {
     private SoopManager() { }
     public static SoopManager getInstance() { return INSTANCE; }
 
+    public boolean hasToken() {
+        return accessToken != null;
+    }
+
+    public boolean isConnected() {
+        return webSocket != null && webSocket.isOpen() && isLoggedIn;
+    }
+
+    public ConnectionStatus getLocalStatus() {
+        boolean hasToken = accessToken != null;
+        boolean socketOk = webSocket != null && webSocket.isOpen();
+        boolean loggedIn = isLoggedIn;
+        if (!hasToken) { return new ConnectionStatus(PLATFORM.SOOP, false, false, false, null); }
+        return new ConnectionStatus(PLATFORM.SOOP, true, socketOk, loggedIn, loggedIn ? "연동 중" : "연결 대기");
+    }
+
+    public void checkStatus(Consumer<ConnectionStatus> callback) {
+        if (accessToken == null) {
+            callback.accept(new ConnectionStatus(PLATFORM.SOOP, false, false, false, null));
+            return;
+        }
+
+        boolean socketOk = webSocket != null && webSocket.isOpen();
+        boolean loggedIn = isLoggedIn;
+
+        new Thread(() -> {
+            try {
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString("access_token=" + accessToken))
+                        .build();
+
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (response.statusCode() == 401) {
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, false, "토큰 만료"));
+                    return;
+                }
+
+                if (response.statusCode() != 200) {
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, loggedIn, "HTTP " + response.statusCode()));
+                    return;
+                }
+
+                JsonObject json = gson.fromJson(response.body(), JsonObject.class);
+
+                if (json.has("error")) {
+                    String error = json.get("error").getAsString();
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, false, "토큰 만료 (" + error + ")"));
+                    return;
+                }
+
+                if (!json.has("result")) {
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, loggedIn, "응답 파싱 실패"));
+                    return;
+                }
+
+                int resultCode = json.get("result").getAsInt();
+
+                if (resultCode == 1) {
+                    String detail = loggedIn ? "방송 중 + 채널 입장 완료" : "방송 중 (소켓 미연결)";
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, loggedIn, detail));
+                }
+                else if (resultCode == -1302) {
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, false, "방송 중이 아님"));
+                }
+                else if (resultCode == -10) {
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, false, "토큰 만료 (result -10)"));
+                }
+                else {
+                    String msg = json.has("msg") ? json.get("msg").getAsString() : "코드 " + resultCode;
+                    callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, false, msg));
+                }
+            }
+            catch (Exception e) {
+                CheeseBridge.LOGGER.error("[SOOP] 상태 확인 중 오류", e);
+                callback.accept(new ConnectionStatus(PLATFORM.SOOP, true, socketOk, loggedIn, e.getMessage()));
+            }
+        }, "Soop-Status-Thread").start();
+    }
+
     private static String buildWsUrl(String chatIp, int chatPort, String bjId) {
         String[] octets = chatIp.split("\\.");
         String hexIp = String.format("%02X%02X%02X%02X",
-            Integer.parseInt(octets[0]),
-            Integer.parseInt(octets[1]),
-            Integer.parseInt(octets[2]),
-            Integer.parseInt(octets[3]));
+                Integer.parseInt(octets[0]),
+                Integer.parseInt(octets[1]),
+                Integer.parseInt(octets[2]),
+                Integer.parseInt(octets[3]));
         return String.format("wss://chat-%s.%s:%d/Websocket/%s", hexIp, SOOPLIVE_ROOT_DOMAIN, chatPort + 1, bjId);
     }
 
@@ -90,10 +174,10 @@ public class SoopManager {
         new Thread(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString("access_token=" + token))
-                    .build();
+                        .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString("access_token=" + token))
+                        .build();
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -124,7 +208,8 @@ public class SoopManager {
                 CheeseBridge.LOGGER.info("[SOOP] 수신된 resultCode: {}", resultCode);
 
                 if (resultCode != 1) {
-                    String errorMsg = json.has("msg") ? json.get("msg").getAsString() : "Unknown Error";
+                    String errorMsg = json.has("msg") ?
+                            json.get("msg").getAsString() : "Unknown Error";
 
                     if (resultCode == -10) {
                         CheeseBridge.LOGGER.warn("[SOOP] 인증 실패(-10) -> 토큰 갱신");
@@ -150,8 +235,8 @@ public class SoopManager {
 
                 JsonElement idElement = data.get("id");
                 this.bjId = idElement.isJsonObject()
-                    ? idElement.getAsJsonObject().get("userId").getAsString()
-                    : idElement.getAsString();
+                        ? idElement.getAsJsonObject().get("userId").getAsString()
+                        : idElement.getAsString();
 
                 String wsUrl = buildWsUrl(chatIp, chatPort, bjId);
                 CheeseBridge.LOGGER.info("[SOOP] WebSocket 연결 시도: {}", wsUrl);
@@ -328,7 +413,8 @@ public class SoopManager {
             switch (type) {
                 case "SETTLE":
                 case "CHALLENGE_SETTLE":
-                    emitMissionSettle(m, type.equals("SETTLE") ? "대결미션정산" : "도전미션정산");
+                    emitMissionSettle(m, type.equals("SETTLE") ?
+                            "대결미션정산" : "도전미션정산");
                     break;
                 default:
                     break;
@@ -388,6 +474,7 @@ public class SoopManager {
         }
         closeSocketOnly();
         this.isLoggedIn = false;
+        this.accessToken = null;
         CheeseBridge.LOGGER.info("숲(SOOP) 연결 해제됨.");
     }
 }

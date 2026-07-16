@@ -1,13 +1,16 @@
 package kr.pyke.client;
 
 import kr.pyke.CheeseBridge;
-import kr.pyke.client.chzzk.ChzzkManager;
-import kr.pyke.client.soop.SoopManager;
+import kr.pyke.client.manager.chzzk.ChzzkManager;
+import kr.pyke.client.gui.hud.DebugHud;
+import kr.pyke.client.input.ModKeyBindings;
+import kr.pyke.client.manager.soop.SoopManager;
 import kr.pyke.command.IntegrationCommand;
 import kr.pyke.network.CheeseBridgePacket;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 
@@ -23,6 +26,10 @@ public class CheeseBridgeClient implements ClientModInitializer {
             SoopManager.getInstance().disconnect();
             CheeseBridge.LOGGER.info("서버 연결 종료로 인해 모든 소켓을 닫습니다.");
         });
+
+        ModKeyBindings.register();
+
+        HudElementRegistry.addLast(CheeseBridge.id("debug"), new DebugHud());
     }
 
     public static void sendMessage(Player player, String message) {
