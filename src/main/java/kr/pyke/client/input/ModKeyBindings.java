@@ -3,6 +3,7 @@ package kr.pyke.client.input;
 import com.mojang.blaze3d.platform.InputConstants;
 import kr.pyke.CheeseBridge;
 import kr.pyke.client.gui.hud.DebugHud;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.client.KeyMapping;
@@ -23,7 +24,7 @@ public class ModKeyBindings {
             generalCategory
         ));
 
-        ServerTickEvents.END_SERVER_TICK.register(server -> {
+        ClientTickEvents.END_CLIENT_TICK.register(server -> {
             while(debugKey.consumeClick()) {
                 DebugHud.toggle();
             }
