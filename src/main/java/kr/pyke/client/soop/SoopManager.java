@@ -60,10 +60,10 @@ public class SoopManager {
     private static String buildWsUrl(String chatIp, int chatPort, String bjId) {
         String[] octets = chatIp.split("\\.");
         String hexIp = String.format("%02X%02X%02X%02X",
-            Integer.parseInt(octets[0]),
-            Integer.parseInt(octets[1]),
-            Integer.parseInt(octets[2]),
-            Integer.parseInt(octets[3]));
+                Integer.parseInt(octets[0]),
+                Integer.parseInt(octets[1]),
+                Integer.parseInt(octets[2]),
+                Integer.parseInt(octets[3]));
         return String.format("wss://chat-%s.%s:%d/Websocket/%s", hexIp, SOOPLIVE_ROOT_DOMAIN, chatPort + 1, bjId);
     }
 
@@ -90,10 +90,10 @@ public class SoopManager {
         new Thread(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString("access_token=" + token))
-                    .build();
+                        .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString("access_token=" + token))
+                        .build();
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -124,7 +124,8 @@ public class SoopManager {
                 CheeseBridge.LOGGER.info("[SOOP] 수신된 resultCode: {}", resultCode);
 
                 if (resultCode != 1) {
-                    String errorMsg = json.has("msg") ? json.get("msg").getAsString() : "Unknown Error";
+                    String errorMsg = json.has("msg") ?
+                            json.get("msg").getAsString() : "Unknown Error";
 
                     if (resultCode == -10) {
                         CheeseBridge.LOGGER.warn("[SOOP] 인증 실패(-10) -> 토큰 갱신");
@@ -150,8 +151,8 @@ public class SoopManager {
 
                 JsonElement idElement = data.get("id");
                 this.bjId = idElement.isJsonObject()
-                    ? idElement.getAsJsonObject().get("userId").getAsString()
-                    : idElement.getAsString();
+                        ? idElement.getAsJsonObject().get("userId").getAsString()
+                        : idElement.getAsString();
 
                 String wsUrl = buildWsUrl(chatIp, chatPort, bjId);
                 CheeseBridge.LOGGER.info("[SOOP] WebSocket 연결 시도: {}", wsUrl);
@@ -328,7 +329,8 @@ public class SoopManager {
             switch (type) {
                 case "SETTLE":
                 case "CHALLENGE_SETTLE":
-                    emitMissionSettle(m, type.equals("SETTLE") ? "대결미션정산" : "도전미션정산");
+                    emitMissionSettle(m, type.equals("SETTLE") ?
+                            "대결미션정산" : "도전미션정산");
                     break;
                 default:
                     break;
@@ -388,6 +390,7 @@ public class SoopManager {
         }
         closeSocketOnly();
         this.isLoggedIn = false;
+        this.accessToken = null;
         CheeseBridge.LOGGER.info("숲(SOOP) 연결 해제됨.");
     }
 }
