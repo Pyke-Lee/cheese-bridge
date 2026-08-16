@@ -13,7 +13,6 @@
 		"main": [ "kr.pyke.CheeseBridge" ],
 		"client": [ "kr.pyke.client.CheeseBridgeClient" ]
 	},
-	"mixins": [ "cheese-bridge.mixins.json" ],
 	"depends": {
 		"fabricloader": ">=0.17.4",
 		"minecraft": "~1.21.1",
