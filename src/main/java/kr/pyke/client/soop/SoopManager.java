@@ -34,6 +34,7 @@ public class SoopManager {
     private static final long RECONNECT_BASE_SEC = 3;      // 첫 재시도 지연
     private static final long RECONNECT_MAX_SEC = 60;      // 최대 지연(상한)
     private static final int  MAX_REFRESH_RETRY = 1;       // 한 끊김당 토큰 갱신 1회 시도
+    private static final long WATCHDOG_TIMEOUT_MS = 90_000; // 마지막 수신 후 이 시간 지나면 강제 재연결
 
     private final Gson gson = new Gson();
     private final HttpClient httpClient = HttpClient.newHttpClient();
@@ -52,6 +53,7 @@ public class SoopManager {
     private volatile int refreshAttempts = 0;           // 이번 끊김 사이클에서 갱신 시도 횟수
     private volatile boolean announceOnJoin = false;    // 사용자가 직접 연동했을 때만 "연동 성공" 메시지 노출
     private volatile boolean silentReconnect = false;   // 토큰 갱신 등 내부 복구로 connect()가 재호출될 때 메시지 억제
+    private volatile long lastMessageAt = 0L;           // 마지막 패킷 수신 시각(워치독용)
 
     private SoopManager() { }
     public static SoopManager getInstance() { return INSTANCE; }
@@ -59,10 +61,10 @@ public class SoopManager {
     private static String buildWsUrl(String chatIp, int chatPort, String bjId) {
         String[] octets = chatIp.split("\\.");
         String hexIp = String.format("%02X%02X%02X%02X",
-            Integer.parseInt(octets[0]),
-            Integer.parseInt(octets[1]),
-            Integer.parseInt(octets[2]),
-            Integer.parseInt(octets[3]));
+                Integer.parseInt(octets[0]),
+                Integer.parseInt(octets[1]),
+                Integer.parseInt(octets[2]),
+                Integer.parseInt(octets[3]));
         return String.format("wss://chat-%s.%s:%d/Websocket/%s", hexIp, SOOPLIVE_ROOT_DOMAIN, chatPort + 1, bjId);
     }
 
@@ -89,10 +91,10 @@ public class SoopManager {
         new Thread(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(HttpRequest.BodyPublishers.ofString("access_token=" + token))
-                    .build();
+                        .uri(URI.create("https://openapi.sooplive.com/broad/access/chatinfo"))
+                        .header("Content-Type", "application/x-www-form-urlencoded")
+                        .POST(HttpRequest.BodyPublishers.ofString("access_token=" + token))
+                        .build();
 
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -149,8 +151,8 @@ public class SoopManager {
 
                 JsonElement idElement = data.get("id");
                 this.bjId = idElement.isJsonObject()
-                    ? idElement.getAsJsonObject().get("userId").getAsString()
-                    : idElement.getAsString();
+                        ? idElement.getAsJsonObject().get("userId").getAsString()
+                        : idElement.getAsString();
 
                 String wsUrl = buildWsUrl(chatIp, chatPort, bjId);
                 CheeseBridge.LOGGER.info("[SOOP] WebSocket 연결 시도: {}", wsUrl);
@@ -164,6 +166,7 @@ public class SoopManager {
                         loginBody.add("");
                         loginBody.add("16");
                         send(SoopProtocol.makePacket(SoopProtocol.SVC_LOGIN, loginBody));
+                        lastMessageAt = System.currentTimeMillis();
                         startKeepAlive();
                     }
 
@@ -174,6 +177,7 @@ public class SoopManager {
 
                     @Override
                     public void onMessage(ByteBuffer bytes) {
+                        lastMessageAt = System.currentTimeMillis();
                         byte[] data = new byte[bytes.remaining()];
                         bytes.get(data);
                         if (data.length > 14) {
@@ -360,6 +364,13 @@ public class SoopManager {
         });
         keepAliveScheduler.scheduleAtFixedRate(() -> {
             if (webSocket != null && webSocket.isOpen()) {
+                // 워치독: 일정 시간 무수신이면 half-open 등으로 판단하고 강제 재연결
+                if (System.currentTimeMillis() - lastMessageAt > WATCHDOG_TIMEOUT_MS) {
+                    CheeseBridge.LOGGER.warn("[SOOP] 워치독: {}ms 무수신 -> 강제 재연결", WATCHDOG_TIMEOUT_MS);
+                    closeSocketOnly();
+                    scheduleReconnect("watchdog timeout");
+                    return;
+                }
                 webSocket.send(SoopProtocol.makePacket(SoopProtocol.SVC_KEEPALIVE, new ArrayList<>()));
             }
         }, KEEPALIVE_SEC, KEEPALIVE_SEC, TimeUnit.SECONDS);
