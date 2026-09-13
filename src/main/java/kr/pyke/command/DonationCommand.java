@@ -9,8 +9,10 @@ import kr.pyke.config.CheeseBridgeConfig;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.integration.DonationEvent;
+import kr.pyke.integration.LinkCheckCollector;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
+import kr.pyke.type.MESSAGE_TYPE;
 import kr.pyke.type.PLATFORM;
 import kr.pyke.util.DonationLogger;
 import net.minecraft.commands.CommandBuildContext;
@@ -47,6 +49,11 @@ public class DonationCommand {
                 .executes(DonationCommand::executeIntegrationConnect)
             )
         );
+
+        dispatcher.register(Commands.literal("연동확인")
+            .requires(source -> source.hasPermission(2))
+            .executes(DonationCommand::executeLinkCheck)
+        );
     }
 
     private static int executeManualDonation(CommandContext<CommandSourceStack> ctx) {
@@ -66,7 +73,7 @@ public class DonationCommand {
                 source.getServer().execute(() -> {
                     DonationLogger.logDonationManager(targetName, String.valueOf(amount), managerName);
                     BridgeIntegration.triggerDonation(target, new DonationEvent("운영자", String.valueOf(amount), "수동 지급", platformTag));
-                    CheeseBridge.sendPersonalMessage(player, String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetName, amount, platformTag));
+                    MESSAGE_TYPE.PERSONAL.send(player, String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetName, amount, platformTag));
                 });
             }
 
@@ -119,6 +126,18 @@ public class DonationCommand {
         else {
             return String.format("https://openapi.sooplive.com/auth/code?client_id=%s&redirect_uri=%s&response_type=code",
                 CheeseBridgeConfig.DATA.soop.clientID, "http://localhost:8080/callback");
+        }
+    }
+
+    private static int executeLinkCheck(CommandContext<CommandSourceStack> ctx) {
+        try {
+            ServerPlayer player = ctx.getSource().getPlayerOrException();
+            LinkCheckCollector.start(player.server, player);
+            return 1;
+        }
+        catch (Exception e) {
+            CheeseBridge.LOGGER.error("연동확인 명령어 실행 중 오류: ", e);
+            return 0;
         }
     }
 }

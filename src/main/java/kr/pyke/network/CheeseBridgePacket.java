@@ -2,8 +2,10 @@ package kr.pyke.network;
 
 import kr.pyke.network.payload.c2s.C2S_AuthCodePayload;
 import kr.pyke.network.payload.c2s.C2S_DonationPayload;
+import kr.pyke.network.payload.c2s.C2S_LinkStatusPayload;
 import kr.pyke.network.payload.c2s.C2S_RequestRefreshPayload;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
+import kr.pyke.network.payload.s2c.S2C_CheckLinkPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -17,11 +19,13 @@ public class CheeseBridgePacket {
         ServerPlayNetworking.registerGlobalReceiver(C2S_DonationPayload.ID, C2S_DonationPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(C2S_AuthCodePayload.ID, C2S_AuthCodePayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(C2S_RequestRefreshPayload.ID, C2S_RequestRefreshPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(C2S_LinkStatusPayload.ID, C2S_LinkStatusPayload::handle);
     }
 
     @Environment(EnvType.CLIENT)
     public static void registerClient() {
         ClientPlayNetworking.registerGlobalReceiver(S2C_AuthUrlPayload.ID, S2C_AuthUrlPayload::handle);
         ClientPlayNetworking.registerGlobalReceiver(S2C_FinalTokenPayload.ID, S2C_FinalTokenPayload::handle);
+        ClientPlayNetworking.registerGlobalReceiver(S2C_CheckLinkPayload.ID, S2C_CheckLinkPayload::handle);
     }
 }

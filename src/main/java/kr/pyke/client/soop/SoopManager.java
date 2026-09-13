@@ -36,6 +36,9 @@ public class SoopManager {
     private static final int  MAX_REFRESH_RETRY = 1;       // 한 끊김당 토큰 갱신 1회 시도
     private static final long WATCHDOG_TIMEOUT_MS = 90_000; // 마지막 수신 후 이 시간 지나면 강제 재연결
 
+    // 연동 상태 (연동확인 기능 내부용)
+    public enum LinkState { CONNECTED, DISCONNECTED, TOKEN_EXPIRED, NO_TOKEN, ERROR }
+
     private final Gson gson = new Gson();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -54,6 +57,10 @@ public class SoopManager {
     private volatile boolean announceOnJoin = false;    // 사용자가 직접 연동했을 때만 "연동 성공" 메시지 노출
     private volatile boolean silentReconnect = false;   // 토큰 갱신 등 내부 복구로 connect()가 재호출될 때 메시지 억제
     private volatile long lastMessageAt = 0L;           // 마지막 패킷 수신 시각(워치독용)
+
+    // 연동확인 지원용 상태 스냅샷
+    private volatile LinkState lastKnownStatus = LinkState.DISCONNECTED; // onOpen/onClose/watchdog/만료가 갱신하는 마지막 상태
+    private volatile String lastCloseReason = "";       // 마지막으로 끊긴 사유(연동확인 표기용)
 
     private SoopManager() { }
     public static SoopManager getInstance() { return INSTANCE; }
@@ -193,6 +200,8 @@ public class SoopManager {
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
                         CheeseBridge.LOGGER.warn("[SOOP] 소켓 닫힘 - 코드: {}, 사유: {}, 원격여부: {}", code, reason, remote);
+                        lastKnownStatus = LinkState.DISCONNECTED;      // 소켓 닫힘 기록
+                        lastCloseReason = "끊김 복구";                  // 원격/로컬 종료로 인한 재연결
                         stopKeepAlive();
                         scheduleReconnect("socket closed(" + code + ")");
                     }
@@ -207,6 +216,8 @@ public class SoopManager {
             }
             catch (Exception e) {
                 CheeseBridge.LOGGER.error("[SOOP] 연결 중 예외", e);
+                lastKnownStatus = LinkState.ERROR;                     // 연결 예외 기록
+                lastCloseReason = "연결 예외";
                 scheduleReconnect("exception: " + e.getMessage());
             }
         }, "Soop-Connect-Thread").start();
@@ -214,6 +225,9 @@ public class SoopManager {
 
     private void handleTokenExpired(String reason) {
         if (manualDisconnect) { return; }
+
+        lastKnownStatus = LinkState.TOKEN_EXPIRED;   // 만료 감지 기록(연동확인 표기용)
+        lastCloseReason = "토큰 재발급";
 
         if (refreshAttempts >= MAX_REFRESH_RETRY) {
             CheeseBridge.LOGGER.warn("[SOOP] 토큰 갱신 재시도 한도 초과({}). 재인증 필요.", reason);
@@ -262,6 +276,7 @@ public class SoopManager {
                 this.isLoggedIn = true;
                 this.reconnectAttempts = 0;  // 연결 성공 -> 백오프 리셋
                 this.refreshAttempts = 0;
+                this.lastKnownStatus = LinkState.CONNECTED;  // 로그인 승인 = 정상 연결 기록
                 CheeseBridge.LOGGER.info("[SOOP] 로그인 승인됨. 채널 입장 시도.");
                 List<String> joinBody = new ArrayList<>();
                 joinBody.add(chatNo);
@@ -367,6 +382,8 @@ public class SoopManager {
                 // 워치독: 일정 시간 무수신이면 half-open 등으로 판단하고 강제 재연결
                 if (System.currentTimeMillis() - lastMessageAt > WATCHDOG_TIMEOUT_MS) {
                     CheeseBridge.LOGGER.warn("[SOOP] 워치독: {}ms 무수신 -> 강제 재연결", WATCHDOG_TIMEOUT_MS);
+                    lastKnownStatus = LinkState.DISCONNECTED;   // 워치독 강제 종료 기록
+                    lastCloseReason = "무응답 복구";             // half-open 감지 재연결
                     closeSocketOnly();
                     scheduleReconnect("watchdog timeout");
                     return;
@@ -399,6 +416,32 @@ public class SoopManager {
         }
         closeSocketOnly();
         this.isLoggedIn = false;
+        this.lastKnownStatus = LinkState.DISCONNECTED;  // 수동 해제 기록
         CheeseBridge.LOGGER.info("숲(SOOP) 연결 해제됨.");
+    }
+
+    public boolean hasToken() { return accessToken != null; }
+
+    public boolean isConnected() {
+        return webSocket != null && webSocket.isOpen() && isLoggedIn;
+    }
+
+    public LinkState getLastKnownStatus() {
+        if (accessToken == null) { return LinkState.NO_TOKEN; }
+
+        return lastKnownStatus;
+    }
+
+    public String getLastCloseReason() {
+        return (lastCloseReason == null || lastCloseReason.isEmpty()) ? "끊김 복구" : lastCloseReason;
+    }
+
+    public synchronized void forceReconnect() {
+        if (accessToken == null) { return; }
+        this.silentReconnect = true;
+        this.reconnectAttempts = 0;
+        closeSocketOnly();
+        this.isLoggedIn = false;
+        scheduleReconnect("manual /연동확인");
     }
 }

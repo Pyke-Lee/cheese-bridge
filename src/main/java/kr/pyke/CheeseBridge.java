@@ -48,30 +48,6 @@ public class CheeseBridge implements ModInitializer {
 		});
 	}
 
-	public static void sendPersonalMessage(ServerPlayer player, String message) {
-		Component component = Component.literal("§6[SYSTEM]§r ").append(parseComponent(message));
-
-		player.sendSystemMessage(component);
-	}
-
-	public static void sendServerMessage(MinecraftServer server, String message) {
-		Collection<ServerPlayer> players = server.getPlayerList().getPlayers();
-		Component component = Component.literal("§6[SYSTEM]§r ").append(parseComponent(message));
-		for (ServerPlayer player : players) {
-			player.sendSystemMessage(component);
-		}
-	}
-
-	public static void broadcastMessage(MinecraftServer server, String message) {
-		Collection<ServerPlayer> players = server.getPlayerList().getPlayers();
-		Component component = Component.literal("ꅑ ").append(parseComponent(message));
-		for (ServerPlayer player : players) {
-			player.sendSystemMessage(Component.empty());
-			player.sendSystemMessage(component);
-			player.sendSystemMessage(Component.empty());
-		}
-	}
-
 	public static MutableComponent parseComponent(String message) {
 		if (message.isEmpty()) { return Component.empty(); }
 
