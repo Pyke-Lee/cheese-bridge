@@ -73,7 +73,7 @@ public class DonationCommand {
                 source.getServer().execute(() -> {
                     DonationLogger.logDonationManager(targetName, String.valueOf(amount), managerName);
                     BridgeIntegration.triggerDonation(target, new DonationEvent("운영자", String.valueOf(amount), "수동 지급", platformTag));
-                    MESSAGE_TYPE.PERSONAL.send(player, String.format("&7%s&f님에게 &e%s(%s)&f 보상을 수동 지급했습니다.", targetName, amount, platformTag));
+                    MESSAGE_TYPE.PERSONAL.send(player, String.format("§7%s§f님에게 §e%s(%s)§f 보상을 수동 지급했습니다.", targetName, amount, platformTag));
                 });
             }
 
