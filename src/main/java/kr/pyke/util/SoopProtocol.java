@@ -9,6 +9,7 @@ public class SoopProtocol {
     public static final String DELIMITER = "\f";
     public static final byte ESC = 27;
     public static final byte TAB = 9;
+    public static final int HEADER_SIZE = 14;
 
     public static final int SVC_KEEPALIVE = 0;
     public static final int SVC_LOGIN = 1;
@@ -17,6 +18,7 @@ public class SoopProtocol {
     public static final int SVC_SDK_LOGIN = 16;
     public static final int SVC_SENDBALLOON = 18;       // 일반 별풍선
     public static final int SVC_SENDBALLOONSUB = 33;    // 중계방 별풍선
+    public static final int SVC_CLOSE_BROAD = 88;
     public static final int SVC_VIDEO_BALLOON = 105;    // 영상풍선
     public static final int SVC_MISSION = 121;          // 대결/도전 미션 (JSON, type 으로 구분)
     public static final int SVC_MISSION_SETTLE = 125;   // 도전미션 정산 후원자 목록 (미사용)
@@ -41,6 +43,22 @@ public class SoopProtocol {
         buffer.put(bodyBytes);
 
         return buffer.array();
+    }
+
+    public static int readServiceCode(byte[] packet) {
+        return readHeaderNumber(packet, 2, 4);
+    }
+
+    public static int readRetCode(byte[] packet) {
+        return readHeaderNumber(packet, 12, 2);
+    }
+
+    private static int readHeaderNumber(byte[] packet, int offset, int length) {
+        if (packet.length < offset + length) { return 0; }
+
+        String value = new String(packet, offset, length, StandardCharsets.UTF_8).trim();
+        try { return Integer.parseInt(value); }
+        catch (NumberFormatException e) { return 0; }
     }
 
     public static List<String> parseBody(String message) {
