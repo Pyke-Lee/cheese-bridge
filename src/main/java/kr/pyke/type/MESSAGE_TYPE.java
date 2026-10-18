@@ -1,5 +1,6 @@
 package kr.pyke.type;
 
+import kr.pyke.CheeseBridge;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -21,7 +22,7 @@ public enum MESSAGE_TYPE {
     }
 
     public void send(ServerPlayer player, String message) {
-        MinecraftServer server = player.level().getServer();
+        MinecraftServer server = CheeseBridge.getServer(player);
         if (server == null) { return; }
         Component component = Component.literal("§6[SYSTEM]§r ").append(message).withStyle(ChatFormatting.WHITE);
 
@@ -37,7 +38,7 @@ public enum MESSAGE_TYPE {
     }
 
     public static void send(MESSAGE_TYPE type, ServerPlayer player, String message) {
-        MinecraftServer server = player.level().getServer();
+        MinecraftServer server = CheeseBridge.getServer(player);
         if (server == null) { return; }
         Component component = Component.literal("§6[SYSTEM]§r ").append(message).withStyle(ChatFormatting.WHITE);
 

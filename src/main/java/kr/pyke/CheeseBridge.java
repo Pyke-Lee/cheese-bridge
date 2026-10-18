@@ -49,9 +49,20 @@ public class CheeseBridge implements ModInitializer {
 		});
 	}
 
+	// 1.21.6 부터 ServerPlayer.level() 이 ServerLevel 을 반환 (이전 serverLevel() 과 같은 메서드)
+	public static MinecraftServer getServer(ServerPlayer player) {
+		//? if >=1.21.6 {
+		/*return player.level().getServer();
+		*///?} else {
+		return player.serverLevel().getServer();
+		//?}
+	}
+
 	public static ResourceLocation id(String path) {
-		//? if >=1.21 {
+		//? if >=1.21.11 {
 		/*return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+		*///?} else if >=1.20.5 {
+		/*return ResourceLocation.tryBuild(MOD_ID, path); // 1.20.5 ~ 1.21.10 공통 (fromNamespaceAndPath 는 1.21 부터)
 		*///?} else {
 		return new ResourceLocation(MOD_ID, path);
 		//?}

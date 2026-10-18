@@ -29,10 +29,10 @@ public class CheeseBridgeClient implements ClientModInitializer {
         if (player == null) { return; }
         Component component = Component.literal("§6[SYSTEM]§r ").append(CheeseBridge.parseComponent(message));
 
-        //? if >=1.21.2 && <26.1 {
-        /*player.displayClientMessage(component, false);
-        *///?} else {
-        player.sendSystemMessage(component);
-        //?}
+        //? if <26.1 {
+        player.displayClientMessage(component, false);
+        //?} else {
+        /*player.sendSystemMessage(component);
+        *///?}
     }
 }

@@ -33,7 +33,8 @@
 [Stonecutter](https://stonecutter.kikugie.dev/) 로 1.20.1 ~ 26.3 을 하나의 소스에서 빌드합니다.
 
 - 빌드 대상 버전: `settings.gradle.kts` 의 `versions(...)`
-- 버전별 Java / Fabric API: `build.gradle.kts` 의 `BuildConfig.TARGETS`
+- 버전별 Java / Fabric API / 호환 범위: `build.gradle.kts` 의 `BuildConfig.TARGETS`
+- 컴파일 결과(바이트코드)가 같은 버전끼리 묶어 그룹의 가장 낮은 버전으로 빌드합니다 (1.20.1 / 1.20.2~1.20.4 / 1.20.5~1.21.4 / 1.21.5~1.21.10 / 1.21.11 / 26.1~26.2 / 26.3). 마인크래프트 API 를 새로 쓰는 코드를 추가했다면 그룹 안의 다른 버전도 잠시 목록에 넣어 빌드해 jar 클래스가 같은지 확인하세요.
 - 버전별 코드 분기: `//? if >=1.21 {` 형태의 Stonecutter 주석 (소스는 `stonecutter active` 버전 기준으로 작성됨)
 - Gradle 데몬은 Java 25 로 실행됩니다 (`gradle/gradle-daemon-jvm.properties`). 각 버전 컴파일에는 JDK 17 / 21 / 25 가 필요하며 없으면 자동으로 받습니다.
 

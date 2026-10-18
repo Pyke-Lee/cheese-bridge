@@ -1,5 +1,6 @@
 package kr.pyke.network;
 
+import kr.pyke.CheeseBridge;
 import kr.pyke.network.payload.c2s.C2S_AuthCodePayload;
 import kr.pyke.network.payload.c2s.C2S_DonationPayload;
 import kr.pyke.network.payload.c2s.C2S_LinkStatusPayload;
@@ -86,13 +87,12 @@ public class CheeseBridgePacket {
     private static <T extends ModPayload> void registerC2S(PayloadType<T> type, ServerHandler<T> handler) {
         //? if >=26.1 {
         /*PayloadTypeRegistry.serverboundPlay().register(type.type(), type.codec());
-        ServerPlayNetworking.registerGlobalReceiver(type.type(), (payload, context) -> handler.handle(payload, context.server(), context.player()));
-        *///?} else if >=1.20.6 {
-        /*PayloadTypeRegistry.playC2S().register(type.type(), type.codec());
-        ServerPlayNetworking.registerGlobalReceiver(type.type(), (payload, context) -> handler.handle(payload, context.server(), context.player()));
         *///?} else if >=1.20.5 {
         /*PayloadTypeRegistry.playC2S().register(type.type(), type.codec());
-        ServerPlayNetworking.registerGlobalReceiver(type.type(), (payload, context) -> handler.handle(payload, context.player().server, context.player()));
+        *///?}
+
+        //? if >=1.20.5 {
+        /*ServerPlayNetworking.registerGlobalReceiver(type.type(), (payload, context) -> handler.handle(payload, CheeseBridge.getServer(context.player()), context.player()));
         *///?} else {
         ServerPlayNetworking.registerGlobalReceiver(type.id(), (server, player, listener, buf, sender) -> handler.handle(type.decode(buf), server, player));
         //?}
