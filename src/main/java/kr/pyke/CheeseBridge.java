@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
@@ -46,6 +47,14 @@ public class CheeseBridge implements ModInitializer {
 				}
 			});
 		});
+	}
+
+	public static ResourceLocation id(String path) {
+		//? if >=1.21 {
+		/*return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+		*///?} else {
+		return new ResourceLocation(MOD_ID, path);
+		//?}
 	}
 
 	public static MutableComponent parseComponent(String message) {

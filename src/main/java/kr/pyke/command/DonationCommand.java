@@ -22,6 +22,10 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+//? if >=1.21.11 {
+/*import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
+*///?}
 
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +36,7 @@ public class DonationCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext context, Commands.CommandSelection selection) {
         dispatcher.register(Commands.literal("후원")
-            .requires(source -> source.hasPermission(2))
+            .requires(DonationCommand::isGameMaster)
             .then(Commands.argument("targets", EntityArgument.players())
                 .then(Commands.argument("platform", StringArgumentType.string())
                     .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(List.of("\"치지직\"", "\"숲\""), builder))
@@ -51,9 +55,17 @@ public class DonationCommand {
         );
 
         dispatcher.register(Commands.literal("연동확인")
-            .requires(source -> source.hasPermission(2))
+            .requires(DonationCommand::isGameMaster)
             .executes(DonationCommand::executeLinkCheck)
         );
+    }
+
+    private static boolean isGameMaster(CommandSourceStack source) {
+        //? if >=1.21.11 {
+        /*return source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.byId(2)));
+        *///?} else {
+        return source.hasPermission(2);
+        //?}
     }
 
     private static int executeManualDonation(CommandContext<CommandSourceStack> ctx) {
@@ -132,7 +144,7 @@ public class DonationCommand {
     private static int executeLinkCheck(CommandContext<CommandSourceStack> ctx) {
         try {
             ServerPlayer player = ctx.getSource().getPlayerOrException();
-            LinkCheckCollector.start(player.server, player);
+            LinkCheckCollector.start(ctx.getSource().getServer(), player);
             return 1;
         }
         catch (Exception e) {

@@ -29,6 +29,19 @@
 }
 ```
 
+## 빌드 (멀티버전)
+[Stonecutter](https://stonecutter.kikugie.dev/) 로 1.20.1 ~ 26.3 을 하나의 소스에서 빌드합니다.
+
+- 빌드 대상 버전: `settings.gradle.kts` 의 `versions(...)`
+- 버전별 Java / Fabric API: `build.gradle.kts` 의 `BuildConfig.TARGETS`
+- 버전별 코드 분기: `//? if >=1.21 {` 형태의 Stonecutter 주석 (소스는 `stonecutter active` 버전 기준으로 작성됨)
+- Gradle 데몬은 Java 25 로 실행됩니다 (`gradle/gradle-daemon-jvm.properties`). 각 버전 컴파일에는 JDK 17 / 21 / 25 가 필요하며 없으면 자동으로 받습니다.
+
+```
+./gradlew build            # 전체 버전 빌드 → build/mods/
+./gradlew :1.21.1:build    # 특정 버전만 빌드
+```
+
 ## 치지직 API 애플리케이션 등록 방법
 https://developers.chzzk.naver.com/
 

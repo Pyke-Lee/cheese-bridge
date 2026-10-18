@@ -7,10 +7,22 @@ import kr.pyke.client.BridgeAuthServer;
 import kr.pyke.client.CheeseBridgeClient;
 import kr.pyke.client.chzzk.ChzzkManager;
 import kr.pyke.client.soop.SoopManager;
+//? if >=26.1 {
+/*import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+*///?} else {
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+//?}
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+//? if >=1.21.11 {
+/*import net.minecraft.util.Util;
+*///?} else {
+import net.minecraft.Util;
+//?}
+
+//? if >=26.3 {
+/*import com.mojang.blaze3d.Blaze3D;
+*///?}
 
 import java.net.URI;
 
@@ -18,7 +30,11 @@ public class IntegrationCommand {
     private static final BridgeAuthServer AUTH_SERVER = new BridgeAuthServer();
 
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
+        //? if >=26.1 {
+        /*dispatcher.register(ClientCommands.literal("연동해제")
+        *///?} else {
         dispatcher.register(ClientCommandManager.literal("연동해제")
+        //?}
             .executes(IntegrationCommand::executeDisconnect)
         );
     }
@@ -46,7 +62,11 @@ public class IntegrationCommand {
     private static void openUrl(String url) {
         try {
             Minecraft.getInstance().keyboardHandler.setClipboard(url);
+            //? if >=26.3 {
+            /*Blaze3D.openUri(new URI(url));
+            *///?} else {
             Util.getPlatform().openUri(new URI(url));
+            //?}
         }
         catch (Exception e) {
             CheeseBridge.LOGGER.error("URL 열기 실패: {}", url, e);

@@ -4,24 +4,26 @@ import kr.pyke.CheeseBridge;
 import kr.pyke.command.DonationCommand;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
+import kr.pyke.network.CheeseBridgePacket;
+import kr.pyke.network.ModPayload;
+import kr.pyke.network.PayloadType;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.type.MESSAGE_TYPE;
 import kr.pyke.type.PLATFORM;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
-public record C2S_RequestRefreshPayload(String platformName) {
-    public static final ResourceLocation ID = new ResourceLocation(CheeseBridge.MOD_ID, "c2s_request_refresh");
+public record C2S_RequestRefreshPayload(String platformName) implements ModPayload {
+    public static final PayloadType<C2S_RequestRefreshPayload> TYPE = PayloadType.create("c2s_request_refresh", C2S_RequestRefreshPayload::decode);
 
-    public static void encode(FriendlyByteBuf buf, C2S_RequestRefreshPayload payload) {
-        buf.writeUtf(payload.platformName);
+    @Override
+    public PayloadType<C2S_RequestRefreshPayload> payloadType() { return TYPE; }
+
+    @Override
+    public void write(FriendlyByteBuf buf) {
+        buf.writeUtf(platformName);
     }
 
     public static C2S_RequestRefreshPayload decode(FriendlyByteBuf buf) {
@@ -29,13 +31,10 @@ public record C2S_RequestRefreshPayload(String platformName) {
     }
 
     public static void send(C2S_RequestRefreshPayload payload) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        encode(buf, payload);
-        ClientPlayNetworking.send(ID, buf);
+        CheeseBridgePacket.sendToServer(payload);
     }
 
-    public static void handle(MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl handler, FriendlyByteBuf buf, PacketSender responseSender) {
-        C2S_RequestRefreshPayload payload = decode(buf);
+    public static void handle(C2S_RequestRefreshPayload payload, MinecraftServer server, ServerPlayer player) {
         server.execute(() -> {
             PLATFORM platform = PLATFORM.valueOf(payload.platformName());
             BridgeDataState state = BridgeDataState.getServerState(server);
