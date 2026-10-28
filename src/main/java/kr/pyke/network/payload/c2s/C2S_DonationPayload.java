@@ -3,22 +3,16 @@ package kr.pyke.network.payload.c2s;
 import kr.pyke.CheeseBridge;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.integration.DonationEvent;
+import kr.pyke.network.CheeseBridgePacket;
 import kr.pyke.type.PLATFORM;
 import kr.pyke.util.DonationLogger;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
 import java.util.Objects;
 
 public record C2S_DonationPayload(String donor, String donationAmount, String donationMessage, String platform) {
-    public static final ResourceLocation ID = new ResourceLocation(CheeseBridge.MOD_ID, "c2s_donation");
-
     public static void encode(FriendlyByteBuf buf, C2S_DonationPayload payload) {
         buf.writeUtf(payload.donor);
         buf.writeUtf(payload.donationAmount);
@@ -31,13 +25,10 @@ public record C2S_DonationPayload(String donor, String donationAmount, String do
     }
 
     public static void send(C2S_DonationPayload payload) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        encode(buf, payload);
-        ClientPlayNetworking.send(ID, buf);
+        CheeseBridgePacket.sendToServer(payload);
     }
 
-    public static void handle(MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl handler, FriendlyByteBuf buf, PacketSender responseSender) {
-        C2S_DonationPayload payload = decode(buf);
+    public static void handle(C2S_DonationPayload payload, MinecraftServer server, ServerPlayer player) {
         String receiverName = player.getName().getString();
 
         server.execute(() -> {

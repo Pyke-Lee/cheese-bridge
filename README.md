@@ -29,6 +29,18 @@
 }
 ```
 
+## 빌드 (Forge 1.20.1)
+[ModDevGradle Legacy](https://github.com/neoforged/ModDevGradle/blob/main/LEGACY.md) 로 Forge 1.20.1 (47.x) 용으로 빌드합니다.
+
+- Forge / Minecraft / Parchment 버전: `build.gradle.kts` 의 `BuildConfig`
+- 모드 ID 는 Forge 규칙(하이픈 불가)에 따라 `cheese_bridge` 입니다.
+- socket.io / okhttp / okio / org.json / Java-WebSocket 은 Jar-in-Jar 로 모드 jar 안에 포함됩니다.
+
+```
+./gradlew build        # → build/mods/cheese-bridge-<버전>+forge1.20.1.jar
+./gradlew runClient    # 개발용 클라이언트 실행
+```
+
 ## 치지직 API 애플리케이션 등록 방법
 https://developers.chzzk.naver.com/
 

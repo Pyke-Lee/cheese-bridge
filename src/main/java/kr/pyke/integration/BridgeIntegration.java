@@ -18,7 +18,7 @@ public class BridgeIntegration {
     private static final Gson GSON = new Gson();
 
     public static void triggerDonation(ServerPlayer player, DonationEvent event) {
-        DonationReceivedCallback.DONATION_RECEIVED.invoker().onDonationReceived(player, event);
+        DonationReceivedCallback.invoke(player, event);
     }
 
     public static BridgeDataState.TokenInfo parseTokenResponse(String jsonResponse) {

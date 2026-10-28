@@ -3,12 +3,12 @@ package kr.pyke.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import kr.pyke.CheeseBridge;
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraftforge.fml.loading.FMLPaths;
 import java.io.*;
 import java.nio.file.Path;
 
 public class CheeseBridgeConfig {
-    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("cheese_bridge.json");
+    private static final Path CONFIG_PATH = FMLPaths.CONFIGDIR.get().resolve("cheese_bridge.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static ConfigInstance DATA = new ConfigInstance();
 

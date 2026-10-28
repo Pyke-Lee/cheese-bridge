@@ -1,0 +1,27 @@
+modLoader = "javafml"
+loaderVersion = "${forge_version_range}"
+license = "ARR"
+
+[[mods]]
+modId = "cheese_bridge"
+version = "${version}"
+displayName = "Cheese Bridge"
+authors = "Pyke_Lee"
+description = '''
+A Minecraft mod that integrates Chzzk and Soop donations with the game in real-time.
+'''
+logoFile = "assets/cheese_bridge/icon.png"
+
+[[dependencies.cheese_bridge]]
+modId = "forge"
+mandatory = true
+versionRange = "${forge_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.cheese_bridge]]
+modId = "minecraft"
+mandatory = true
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"

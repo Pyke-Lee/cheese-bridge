@@ -7,24 +7,24 @@ import kr.pyke.client.BridgeAuthServer;
 import kr.pyke.client.CheeseBridgeClient;
 import kr.pyke.client.chzzk.ChzzkManager;
 import kr.pyke.client.soop.SoopManager;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 
 import java.net.URI;
 
 public class IntegrationCommand {
     private static final BridgeAuthServer AUTH_SERVER = new BridgeAuthServer();
 
-    public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
-        dispatcher.register(ClientCommandManager.literal("연동해제")
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("연동해제")
             .executes(IntegrationCommand::executeDisconnect)
         );
     }
 
-    private static int executeDisconnect(CommandContext<FabricClientCommandSource> ctx) {
-        ctx.getSource().getClient().execute(() -> {
+    private static int executeDisconnect(CommandContext<CommandSourceStack> ctx) {
+        Minecraft.getInstance().execute(() -> {
             try {
                 ChzzkManager.getInstance().disconnect();
                 SoopManager.getInstance().disconnect();

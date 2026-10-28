@@ -3,20 +3,14 @@ package kr.pyke.network.payload.c2s;
 import kr.pyke.CheeseBridge;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
+import kr.pyke.network.CheeseBridgePacket;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.type.PLATFORM;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
 public record C2S_AuthCodePayload(String code, String state, String platformName) {
-    public static final ResourceLocation ID = new ResourceLocation(CheeseBridge.MOD_ID, "c2s_auth_code");
-
     public static void encode(FriendlyByteBuf buf, C2S_AuthCodePayload payload) {
         buf.writeUtf(payload.code);
         buf.writeUtf(payload.state);
@@ -28,13 +22,10 @@ public record C2S_AuthCodePayload(String code, String state, String platformName
     }
 
     public static void send(C2S_AuthCodePayload payload) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        encode(buf, payload);
-        ClientPlayNetworking.send(ID, buf);
+        CheeseBridgePacket.sendToServer(payload);
     }
 
-    public static void handle(MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl handler, FriendlyByteBuf buf, PacketSender responseSender) {
-        C2S_AuthCodePayload payload = decode(buf);
+    public static void handle(C2S_AuthCodePayload payload, MinecraftServer server, ServerPlayer player) {
         server.execute(() -> {
             PLATFORM platform = PLATFORM.valueOf(payload.platformName());
             String jsonResponse = BridgeIntegration.exchangeCodeForToken(platform, payload.code(), payload.state());
