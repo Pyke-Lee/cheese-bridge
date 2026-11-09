@@ -87,6 +87,11 @@ tasks {
             expand(propertiesMap)
         }
     }
+
+    named<Jar>("jar") {
+        //from("LICENSE")
+        destinationDirectory.set(layout.buildDirectory.dir("mods"))
+    }
 }
 
 java {

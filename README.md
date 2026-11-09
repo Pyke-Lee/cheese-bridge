@@ -37,7 +37,7 @@
 - socket.io / okhttp / okio / org.json / Java-WebSocket 은 Jar-in-Jar 로 모드 jar 안에 포함됩니다.
 
 ```
-./gradlew build        # → build/libs/cheese-bridge-<버전>+neoforge1.21.1.jar
+./gradlew build        # → build/mods/cheese-bridge-<버전>+neoforge1.21.1.jar
 ./gradlew runClient    # 개발용 클라이언트 실행
 ```
 
