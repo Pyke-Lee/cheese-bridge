@@ -4,6 +4,8 @@ import kr.pyke.CheeseBridge;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.integration.DonationEvent;
 import kr.pyke.network.CheeseBridgePacket;
+import kr.pyke.network.ModPayload;
+import kr.pyke.network.PayloadType;
 import kr.pyke.type.PLATFORM;
 import kr.pyke.util.DonationLogger;
 import net.minecraft.network.FriendlyByteBuf;
@@ -12,12 +14,18 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Objects;
 
-public record C2S_DonationPayload(String donor, String donationAmount, String donationMessage, String platform) {
-    public static void encode(FriendlyByteBuf buf, C2S_DonationPayload payload) {
-        buf.writeUtf(payload.donor);
-        buf.writeUtf(payload.donationAmount);
-        buf.writeUtf(payload.donationMessage);
-        buf.writeUtf(payload.platform);
+public record C2S_DonationPayload(String donor, String donationAmount, String donationMessage, String platform) implements ModPayload {
+    public static final PayloadType<C2S_DonationPayload> TYPE = PayloadType.create("c2s_donation", C2S_DonationPayload::decode);
+
+    @Override
+    public PayloadType<C2S_DonationPayload> payloadType() { return TYPE; }
+
+    @Override
+    public void write(FriendlyByteBuf buf) {
+        buf.writeUtf(donor);
+        buf.writeUtf(donationAmount);
+        buf.writeUtf(donationMessage);
+        buf.writeUtf(platform);
     }
 
     public static C2S_DonationPayload decode(FriendlyByteBuf buf) {

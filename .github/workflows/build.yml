@@ -19,11 +19,11 @@ jobs:
       - name: Validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v5
 
-      - name: Setup Java 17
+      - name: Setup Java 21
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Make gradle wrapper executable
         run: chmod +x ./gradlew
@@ -40,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: artifacts
-          path: build/mods/*.jar
+          path: build/libs/*.jar

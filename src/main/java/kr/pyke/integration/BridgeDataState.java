@@ -1,16 +1,16 @@
 package kr.pyke.integration;
 
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import kr.pyke.CheeseBridge;
 import kr.pyke.type.PLATFORM;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.saveddata.SavedData;
+import com.mojang.serialization.DataResult;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.core.HolderLookup;
 
 import java.util.*;
 
@@ -40,12 +40,8 @@ public class BridgeDataState extends SavedData {
 
     public BridgeDataState() { }
 
-    public static BridgeDataState load(CompoundTag tag) {
+    private static BridgeDataState fromEntries(List<TokenEntry> entries) {
         BridgeDataState state = new BridgeDataState();
-        if (!tag.contains(NBT_KEY)) { return state; }
-
-        DataResult<List<TokenEntry>> result = ENTRIES_CODEC.parse(NbtOps.INSTANCE, tag.get(NBT_KEY));
-        List<TokenEntry> entries = result.resultOrPartial(err -> CheeseBridge.LOGGER.error("[DataState] 로드 실패: {}", err)).orElse(List.of());
 
         for (TokenEntry entry : entries) {
             try {
@@ -61,8 +57,7 @@ public class BridgeDataState extends SavedData {
         return state;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag compoundTag) {
+    private List<TokenEntry> toEntries() {
         List<TokenEntry> entries = new ArrayList<>();
         playerTokens.forEach((uuid, map) ->
             map.forEach((platform, info) ->
@@ -70,12 +65,28 @@ public class BridgeDataState extends SavedData {
             )
         );
 
-        DataResult<Tag> result = ENTRIES_CODEC.encodeStart(NbtOps.INSTANCE, entries);
+        return entries;
+    }
+
+    private static BridgeDataState fromTag(CompoundTag tag) {
+        if (!tag.contains(NBT_KEY)) { return new BridgeDataState(); }
+
+        DataResult<List<TokenEntry>> result = ENTRIES_CODEC.parse(NbtOps.INSTANCE, tag.get(NBT_KEY));
+        return fromEntries(result.resultOrPartial(err -> CheeseBridge.LOGGER.error("[DataState] 로드 실패: {}", err)).orElse(List.of()));
+    }
+
+    private CompoundTag toTag(CompoundTag compoundTag) {
+        DataResult<Tag> result = ENTRIES_CODEC.encodeStart(NbtOps.INSTANCE, toEntries());
         result.resultOrPartial(err -> CheeseBridge.LOGGER.error("[DataState] 저장 실패: {}", err))
             .ifPresent(encoded -> compoundTag.put(NBT_KEY, encoded));
 
         return compoundTag;
     }
+
+    public static BridgeDataState load(CompoundTag tag, HolderLookup.Provider registries) { return fromTag(tag); }
+
+    @Override
+    public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider registries) { return toTag(compoundTag); }
 
     public TokenInfo getToken(UUID uuid, PLATFORM platform) {
         return playerTokens.getOrDefault(uuid, new HashMap<>()).get(platform);
@@ -87,7 +98,6 @@ public class BridgeDataState extends SavedData {
     }
 
     public static BridgeDataState getServerState(MinecraftServer server) {
-        ServerLevel overworld = server.overworld();
-        return overworld.getDataStorage().computeIfAbsent(BridgeDataState::load, BridgeDataState::new, DATA_NAME);
+        return server.overworld().getDataStorage().computeIfAbsent(new SavedData.Factory<>(BridgeDataState::new, BridgeDataState::load, null), DATA_NAME);
     }
 }

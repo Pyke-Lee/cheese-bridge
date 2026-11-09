@@ -7,7 +7,7 @@ pluginManagement {
 }
 
 plugins {
-    // Downloads a missing JDK 17 for the toolchain
+    // Downloads a missing JDK 21 for the toolchain
     id("org.gradle.toolchains.foojay-resolver-convention") version("1.0.0")
 }
 

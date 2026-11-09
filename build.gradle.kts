@@ -1,19 +1,20 @@
 object BuildConfig {
-    val JAVA_VERSION: Int = 17
+    val JAVA_VERSION: Int = 21
 
-    val MINECRAFT_VERSION: String = "1.20.1"
-    val MINECRAFT_VERSION_RANGE: String = "[1.20.1,1.20.2)"
-    val FORGE_VERSION: String = "47.4.28"
-    val FORGE_VERSION_RANGE: String = "[47,)"
-    val PARCHMENT_VERSION: String = "2023.09.03"
+    val MINECRAFT_VERSION: String = "1.21.1"
+    val MINECRAFT_VERSION_RANGE: String = "[1.21.1,1.21.2)"
+    val NEOFORGE_VERSION: String = "21.1.265"
+    val NEOFORGE_VERSION_RANGE: String = "[21.1,)"
+    val LOADER_VERSION_RANGE: String = "[4,)"
+    val PARCHMENT_VERSION: String = "2024.11.17"
 
     // https://semver.org/
-    var MOD_VERSION: String = "1.3.8"
+    var MOD_VERSION: String = "1.4.0"
 }
 
 plugins {
     id("java-library")
-    id("net.neoforged.moddev.legacyforge") version("2.0.148")
+    id("net.neoforged.moddev") version("2.0.148")
 }
 
 base {
@@ -27,8 +28,8 @@ repositories {
     mavenCentral()
 }
 
-legacyForge {
-    version = "${BuildConfig.MINECRAFT_VERSION}-${BuildConfig.FORGE_VERSION}"
+neoForge {
+    version = BuildConfig.NEOFORGE_VERSION
 
     parchment {
         minecraftVersion = BuildConfig.MINECRAFT_VERSION
@@ -64,7 +65,7 @@ val bundledLibraries: List<String> = listOf(
 dependencies {
     for (library in bundledLibraries) {
         jarJar(implementation(library)!!)
-        // Forge loads mods on the module path, so dev runs need the libraries added explicitly
+        // NeoForge loads mods on the module path, so dev runs need the libraries added explicitly
         "additionalRuntimeClasspath"(library)
     }
 
@@ -78,18 +79,13 @@ tasks {
         val propertiesMap = mapOf(
             "version" to version,
             "minecraft_version_range" to BuildConfig.MINECRAFT_VERSION_RANGE,
-            "forge_version_range" to BuildConfig.FORGE_VERSION_RANGE
+            "neoforge_version_range" to BuildConfig.NEOFORGE_VERSION_RANGE,
+            "loader_version_range" to BuildConfig.LOADER_VERSION_RANGE
         )
         inputs.properties(propertiesMap)
-        filesMatching(listOf("META-INF/mods.toml")) {
+        filesMatching(listOf("META-INF/neoforge.mods.toml")) {
             expand(propertiesMap)
         }
-    }
-
-    // reobfJar (SRG) is the jar to distribute; the plain jar is moved to build/devlibs
-    named<Jar>("reobfJar") {
-        //from("LICENSE")
-        destinationDirectory.set(layout.buildDirectory.dir("mods"))
     }
 }
 
@@ -112,7 +108,7 @@ fun createVersionString(): String {
     val builder = StringBuilder()
 
     builder.append(BuildConfig.MOD_VERSION)
-    builder.append("+forge").append(BuildConfig.MINECRAFT_VERSION)
+    builder.append("+neoforge").append(BuildConfig.MINECRAFT_VERSION)
 
     return builder.toString()
 }

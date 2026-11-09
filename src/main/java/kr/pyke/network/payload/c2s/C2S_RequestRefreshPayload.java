@@ -5,6 +5,8 @@ import kr.pyke.command.DonationCommand;
 import kr.pyke.integration.BridgeDataState;
 import kr.pyke.integration.BridgeIntegration;
 import kr.pyke.network.CheeseBridgePacket;
+import kr.pyke.network.ModPayload;
+import kr.pyke.network.PayloadType;
 import kr.pyke.network.payload.s2c.S2C_AuthUrlPayload;
 import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.type.MESSAGE_TYPE;
@@ -13,9 +15,15 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-public record C2S_RequestRefreshPayload(String platformName) {
-    public static void encode(FriendlyByteBuf buf, C2S_RequestRefreshPayload payload) {
-        buf.writeUtf(payload.platformName);
+public record C2S_RequestRefreshPayload(String platformName) implements ModPayload {
+    public static final PayloadType<C2S_RequestRefreshPayload> TYPE = PayloadType.create("c2s_request_refresh", C2S_RequestRefreshPayload::decode);
+
+    @Override
+    public PayloadType<C2S_RequestRefreshPayload> payloadType() { return TYPE; }
+
+    @Override
+    public void write(FriendlyByteBuf buf) {
+        buf.writeUtf(platformName);
     }
 
     public static C2S_RequestRefreshPayload decode(FriendlyByteBuf buf) {

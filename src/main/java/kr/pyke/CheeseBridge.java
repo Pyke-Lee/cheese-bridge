@@ -9,14 +9,16 @@ import kr.pyke.network.payload.s2c.S2C_FinalTokenPayload;
 import kr.pyke.type.PLATFORM;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,16 +27,16 @@ public class CheeseBridge {
 	public static final String MOD_ID = "cheese_bridge";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public CheeseBridge() {
+	public CheeseBridge(IEventBus modEventBus) {
 		CheeseBridgeConfig.loadConfiguration();
 
-		CheeseBridgePacket.register();
+		modEventBus.addListener(CheeseBridgePacket::register);
 
-		MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) ->
+		NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) ->
 			DonationCommand.register(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection())
 		);
 
-		MinecraftForge.EVENT_BUS.addListener(CheeseBridge::onPlayerLoggedIn);
+		NeoForge.EVENT_BUS.addListener(CheeseBridge::onPlayerLoggedIn);
 
 		if (FMLEnvironment.dist == Dist.CLIENT) {
 			CheeseBridgeClient.init();
@@ -43,7 +45,7 @@ public class CheeseBridge {
 
 	private static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
 		if (!(event.getEntity() instanceof ServerPlayer player)) { return; }
-		MinecraftServer server = player.getServer();
+		MinecraftServer server = getServer(player);
 		if (server == null) { return; }
 
 		server.execute(() -> {
@@ -58,6 +60,14 @@ public class CheeseBridge {
 				}
 			}
 		});
+	}
+
+	public static MinecraftServer getServer(ServerPlayer player) {
+		return player.serverLevel().getServer();
+	}
+
+	public static ResourceLocation id(String path) {
+		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
 	}
 
 	public static MutableComponent parseComponent(String message) {

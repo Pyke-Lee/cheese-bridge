@@ -2,14 +2,22 @@ package kr.pyke.network.payload.c2s;
 
 import kr.pyke.integration.LinkCheckCollector;
 import kr.pyke.network.CheeseBridgePacket;
+import kr.pyke.network.ModPayload;
+import kr.pyke.network.PayloadType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-public record C2S_LinkStatusPayload(String requestId, String result) {
-    public static void encode(FriendlyByteBuf buf, C2S_LinkStatusPayload payload) {
-        buf.writeUtf(payload.requestId);
-        buf.writeUtf(payload.result);
+public record C2S_LinkStatusPayload(String requestId, String result) implements ModPayload {
+    public static final PayloadType<C2S_LinkStatusPayload> TYPE = PayloadType.create("c2s_link_status", C2S_LinkStatusPayload::decode);
+
+    @Override
+    public PayloadType<C2S_LinkStatusPayload> payloadType() { return TYPE; }
+
+    @Override
+    public void write(FriendlyByteBuf buf) {
+        buf.writeUtf(requestId);
+        buf.writeUtf(result);
     }
 
     public static C2S_LinkStatusPayload decode(FriendlyByteBuf buf) {
